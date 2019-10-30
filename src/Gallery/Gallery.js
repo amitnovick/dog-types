@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import InfiniteScroll from "../InfiniteScroll/InfiniteScroll";
 import styles from "./styles.module.scss";
@@ -62,6 +63,7 @@ class Gallery extends React.PureComponent {
               >
                 {cachedItem.id}
               </div>
+              <Link to={`/${cachedItem.id}`}>Go</Link>
             </li>
           ))}
         </ul>
