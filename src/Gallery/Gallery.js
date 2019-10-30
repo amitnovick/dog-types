@@ -49,7 +49,7 @@ class Gallery extends React.PureComponent {
   render() {
     const { cachedItems } = this.state;
     return (
-      <InfiniteScroll fetchData={this.fetchData}>
+      <>
         <ul>
           {cachedItems.map(cachedItem => (
             <li key={cachedItem.id} className={styles.li}>
@@ -65,7 +65,8 @@ class Gallery extends React.PureComponent {
             </li>
           ))}
         </ul>
-      </InfiniteScroll>
+        <InfiniteScroll fetchData={this.fetchData} />
+      </>
     );
   }
 }

@@ -48,13 +48,11 @@ class InfiniteScroll extends React.PureComponent {
   }
 
   render() {
-    const { children } = this.props;
     const { isDataSourceExhausted } = this.state;
     const { bottomSentinelRef } = this;
 
     return (
       <>
-        {children}
         {isDataSourceExhausted === true ? (
           <div className={styles.exhausted}>No more items to display!</div>
         ) : (
@@ -68,7 +66,6 @@ class InfiniteScroll extends React.PureComponent {
 }
 
 InfiniteScroll.propTypes = {
-  children: PropTypes.node.isRequired,
   fetchData: PropTypes.func.isRequired
 };
 
