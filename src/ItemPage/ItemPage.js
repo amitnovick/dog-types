@@ -11,17 +11,30 @@ class ItemPage extends React.PureComponent {
 
   render() {
     const { itemId } = this.props;
-    console.log("itemId:", itemId);
     const item = items.find(item => String(item.id) === String(itemId));
-    console.log("item:", item);
 
     return (
       <div className={styles.page}>
-        <div
-          className={styles.image}
-          style={{ backgroundColor: item.backgroundColor, color: item.color }}
-        />
-        <h1>id: {itemId}</h1>
+        {item == null ? (
+          <>
+            <div
+              className={styles.image}
+              style={{ backgroundColor: "black", color: "white" }}
+            />
+            <h1>id: NotFound</h1>
+          </>
+        ) : (
+          <>
+            <div
+              className={styles.image}
+              style={{
+                backgroundColor: item.backgroundColor,
+                color: item.color
+              }}
+            />
+            <h1>id: {itemId}</h1>
+          </>
+        )}
       </div>
     );
   }

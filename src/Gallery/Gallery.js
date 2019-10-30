@@ -43,7 +43,7 @@ class Gallery extends React.PureComponent {
         resolve({
           isDataSourceExhausted: this.state.cachedItems.length >= 65
         });
-      }, 2000);
+      }, 500);
     });
   };
 
@@ -57,13 +57,16 @@ class Gallery extends React.PureComponent {
               <div
                 className={styles.circle}
                 style={{
-                  backgroundColor: cachedItem.backgroundColor,
-                  color: cachedItem.color
+                  backgroundColor: cachedItem.backgroundColor
                 }}
               >
-                {cachedItem.id}
+                <Link
+                  to={`/${cachedItem.id}`}
+                  style={{ color: cachedItem.color }}
+                >
+                  {cachedItem.id}
+                </Link>
               </div>
-              <Link to={`/${cachedItem.id}`}>Go</Link>
             </li>
           ))}
         </ul>

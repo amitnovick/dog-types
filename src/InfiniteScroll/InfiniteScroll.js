@@ -52,15 +52,14 @@ class InfiniteScroll extends React.PureComponent {
     const { bottomSentinelRef } = this;
 
     return (
-      <>
-        {isDataSourceExhausted === true ? (
-          <div className={styles.exhausted}>No more items to display!</div>
-        ) : (
-          <div ref={bottomSentinelRef} className={styles.loader}>
-            Loading...
-          </div>
-        )}
-      </>
+      <div
+        ref={bottomSentinelRef}
+        className={
+          isDataSourceExhausted === true ? styles.exhausted : styles.loader
+        }
+      >
+        {isDataSourceExhausted ? "No more items to display!" : "Loading..."}
+      </div>
     );
   }
 }
