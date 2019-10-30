@@ -1,8 +1,7 @@
 import React from "react";
-import items from "../items";
-import styles from "./styles.module.scss";
+import PropTypes from "prop-types";
 
-const ITEMS_COUNT_PER_LOAD = 20;
+import styles from "./styles.module.scss";
 
 class InfiniteScroll extends React.PureComponent {
   constructor(props) {
@@ -11,42 +10,31 @@ class InfiniteScroll extends React.PureComponent {
     this.bottomSentinelRef = React.createRef();
 
     this.state = {
-      loaderState: "idle", // `idle` | `loading`
-      dataSourceExhaustionState: "notExhausted" // `notExhausted` | `exhausted`
+      isLoading: false,
+      isDataSourceExhausted: false
     };
   }
 
-  fetchData = () => {
-    this.setState({ loaderState: "loading" });
-    setTimeout(() => {
-      this.setState(previousState => ({
-        renderedItemsLastIndex:
-          previousState.renderedItemsLastIndex + ITEMS_COUNT_PER_LOAD,
-        loaderState: "idle",
-        cachedItems: [
-          ...previousState.cachedItems,
-          ...items.slice(
-            previousState.renderedItemsLastIndex + 1,
-            previousState.renderedItemsLastIndex + 1 + ITEMS_COUNT_PER_LOAD
-          )
-        ],
-        dataSourceExhaustionState:
-          previousState.renderedItemsLastIndex + 1 + ITEMS_COUNT_PER_LOAD > 420
-            ? "exhausted"
-            : "notExhausted"
-      }));
-    }, 500);
+  loadData = async () => {
+    this.setState({ isLoading: true });
+    const { isDataSourceExhausted } = await this.props.fetchData();
+    this.setState(previousState => {
+      return {
+        isLoading: false,
+        isDataSourceExhausted: isDataSourceExhausted
+      };
+    });
   };
 
   componentDidMount() {
-    this.fetchData();
+    this.loadData();
     this.observer = new IntersectionObserver(([entry]) => {
       if (
         entry.isIntersecting &&
-        this.state.loaderState === "idle" &&
-        this.state.dataSourceExhaustionState === "notExhausted"
+        this.state.isLoading === false &&
+        this.state.isDataSourceExhausted === false
       ) {
-        this.fetchData();
+        this.loadData();
       }
     }, {});
     const bottomSentinelElement = this.bottomSentinelRef.current;
@@ -60,12 +48,14 @@ class InfiniteScroll extends React.PureComponent {
   }
 
   render() {
-    const { dataSourceExhaustionState } = this.state;
+    const { children } = this.props;
+    const { isDataSourceExhausted } = this.state;
     const { bottomSentinelRef } = this;
 
     return (
       <>
-        {dataSourceExhaustionState === "exhausted" ? (
+        {children}
+        {isDataSourceExhausted === true ? (
           <div className={styles.exhausted}>No more items to display!</div>
         ) : (
           <div ref={bottomSentinelRef} className={styles.loader}>
@@ -76,5 +66,10 @@ class InfiniteScroll extends React.PureComponent {
     );
   }
 }
+
+InfiniteScroll.propTypes = {
+  children: PropTypes.node.isRequired,
+  fetchData: PropTypes.func.isRequired
+};
 
 export default InfiniteScroll;

@@ -4,8 +4,8 @@ import "normalize.css";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import "./globalStyle.css";
-import InfiniteScroll from "./InfiniteScroll/InfiniteScroll";
 import ItemPage from "./ItemPage/ItemPage";
+import Gallery from "./Gallery/Gallery";
 
 class App extends React.PureComponent {
   render() {
@@ -13,7 +13,7 @@ class App extends React.PureComponent {
       <Router>
         <Switch>
           <Route exact path="/">
-            <InfiniteScroll />
+            <Gallery />
           </Route>
           <Route exact path="/:itemId">
             {({ match }) => <ItemPage itemId={match.params.itemId} />}
