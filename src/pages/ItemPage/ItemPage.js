@@ -10,13 +10,17 @@ class ItemPage extends React.PureComponent {
   // }
 
   render() {
-    const { itemId, shouldDisplayBackToGalleryButton } = this.props;
+    const {
+      itemId,
+      shouldDisplayBackToGalleryButton,
+      navigateBackToGalleryButton
+    } = this.props;
     const item = items.find(item => String(item.id) === String(itemId));
 
     return (
       <div className={styles.page}>
         {shouldDisplayBackToGalleryButton ? (
-          <button onClick={() => {}}>Back</button>
+          <button onClick={() => navigateBackToGalleryButton()}>Back</button>
         ) : null}
         {item == null ? (
           <>
@@ -45,7 +49,8 @@ class ItemPage extends React.PureComponent {
 
 ItemPage.propTypes = {
   itemId: PropTypes.string.isRequired,
-  shouldDisplayBackToGalleryButton: PropTypes.bool.isRequired
+  shouldDisplayBackToGalleryButton: PropTypes.bool.isRequired,
+  navigateBackToGalleryButton: PropTypes.func.isRequired
 };
 
 export default ItemPage;

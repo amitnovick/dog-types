@@ -14,7 +14,7 @@ class CustomRouter extends React.PureComponent {
       userFlowState: "normal", // `normal` | `galleryToItemPage` | `galleryToItemPageToGallery`
       cachedGalleryPageItems: [],
       cachedRenderedItemsLastIndex: null,
-      itemIdFromItemPageRedirection: null
+      cachedItemIdFromItemPageRedirection: null
     };
   }
 
@@ -31,6 +31,7 @@ class CustomRouter extends React.PureComponent {
       }
     });
   }
+
   componentWillUnmount() {
     this.unblock();
   }
@@ -41,7 +42,7 @@ class CustomRouter extends React.PureComponent {
       userFlowState,
       cachedGalleryPageItems,
       cachedRenderedItemsLastIndex,
-      itemIdFromItemPageRedirection
+      cachedItemIdFromItemPageRedirection
     } = this.state;
 
     return (
@@ -51,7 +52,7 @@ class CustomRouter extends React.PureComponent {
             navigateToItem={({ itemId, items, renderedItemsLastIndex }) => {
               this.setState({
                 userFlowState: "galleryToItemPage",
-                itemIdFromItemPageRedirection: itemId,
+                cachedItemIdFromItemPageRedirection: itemId,
                 cachedGalleryPageItems: items,
                 cachedRenderedItemsLastIndex: renderedItemsLastIndex
               });
@@ -62,7 +63,9 @@ class CustomRouter extends React.PureComponent {
             }
             cachedItems={cachedGalleryPageItems}
             cachedRenderedItemsLastIndex={cachedRenderedItemsLastIndex}
-            itemIdFromItemPageRedirection={itemIdFromItemPageRedirection}
+            cachedItemIdFromItemPageRedirection={
+              cachedItemIdFromItemPageRedirection
+            }
           />
         </Route>
         <Route exact path="/:itemId">
@@ -72,6 +75,7 @@ class CustomRouter extends React.PureComponent {
               shouldDisplayBackToGalleryButton={
                 userFlowState === "galleryToItemPage"
               }
+              navigateBackToGalleryButton={() => history.goBack()}
             />
           )}
         </Route>
