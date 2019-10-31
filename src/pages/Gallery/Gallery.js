@@ -17,7 +17,6 @@ class Gallery extends React.PureComponent {
     } = props;
 
     /* TODO: handle prop `cachedItemIdFromItemPageRedirection` and scroll to it when `isNavigatingBackFromItemPage === true` */
-    console.log("isNavigatingBackFromItemPage:", isNavigatingBackFromItemPage);
     this.state = {
       renderedItemsLastIndex: isNavigatingBackFromItemPage
         ? cachedRenderedItemsLastIndex

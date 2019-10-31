@@ -1,5 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "./styles.module.scss";
 import items from "../../items";
@@ -20,7 +22,14 @@ class ItemPage extends React.PureComponent {
     return (
       <div className={styles.page}>
         {shouldDisplayBackToGalleryButton ? (
-          <button onClick={() => navigateBackToGalleryButton()}>Back</button>
+          <div className={styles.backNavigationButtonRow}>
+            <button
+              onClick={() => navigateBackToGalleryButton()}
+              className={styles.backNavigationButton}
+            >
+              <FontAwesomeIcon icon={faArrowLeft} size="3x" />
+            </button>
+          </div>
         ) : null}
         {item == null ? (
           <>
