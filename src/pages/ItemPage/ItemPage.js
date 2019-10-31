@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import styles from "./styles.module.scss";
-import items from "../items";
+import items from "../../items";
 
 class ItemPage extends React.PureComponent {
   // constructor(props) {
@@ -10,11 +10,14 @@ class ItemPage extends React.PureComponent {
   // }
 
   render() {
-    const { itemId } = this.props;
+    const { itemId, shouldDisplayBackToGalleryButton } = this.props;
     const item = items.find(item => String(item.id) === String(itemId));
 
     return (
       <div className={styles.page}>
+        {shouldDisplayBackToGalleryButton ? (
+          <button onClick={() => {}}>Back</button>
+        ) : null}
         {item == null ? (
           <>
             <div
@@ -41,7 +44,8 @@ class ItemPage extends React.PureComponent {
 }
 
 ItemPage.propTypes = {
-  itemId: PropTypes.string.isRequired
+  itemId: PropTypes.string.isRequired,
+  shouldDisplayBackToGalleryButton: PropTypes.bool.isRequired
 };
 
 export default ItemPage;

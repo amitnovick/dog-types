@@ -27,7 +27,6 @@ class InfiniteScroll extends React.PureComponent {
   };
 
   componentDidMount() {
-    this.loadData();
     this.observer = new IntersectionObserver(([entry]) => {
       if (
         entry.isIntersecting &&

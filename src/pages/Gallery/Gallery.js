@@ -1,18 +1,22 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 
-import InfiniteScroll from "../InfiniteScroll/InfiniteScroll";
+import InfiniteScroll from "../../components/InfiniteScroll/InfiniteScroll";
 import styles from "./styles.module.scss";
-import items from "../items";
+import items from "../../items";
 
 const ITEMS_COUNT_PER_LOAD = 20;
 
 class Gallery extends React.PureComponent {
   constructor(props) {
     super(props);
+    const { isNavigatingBackFromItemPage, cachedItems } = props;
+
+    /* TODO: handle prop `itemIdFromItemPageRedirection` and scroll to it when `isNavigatingBackFromItemPage === true` */
+    console.log("isNavigatingBackFromItemPage:", isNavigatingBackFromItemPage);
     this.state = {
       renderedItemsLastIndex: 0,
-      cachedItems: []
+      cachedItems: isNavigatingBackFromItemPage ? cachedItems : []
     };
   }
 
@@ -48,6 +52,7 @@ class Gallery extends React.PureComponent {
   };
 
   render() {
+    const { navigateToItem } = this.props;
     const { cachedItems } = this.state;
     return (
       <>
@@ -57,15 +62,14 @@ class Gallery extends React.PureComponent {
               <div
                 className={styles.circle}
                 style={{
-                  backgroundColor: cachedItem.backgroundColor
+                  backgroundColor: cachedItem.backgroundColor,
+                  color: cachedItem.color
                 }}
+                onClick={() =>
+                  navigateToItem(String(cachedItem.id), cachedItems)
+                }
               >
-                <Link
-                  to={`/${cachedItem.id}`}
-                  style={{ color: cachedItem.color }}
-                >
-                  {cachedItem.id}
-                </Link>
+                {cachedItem.id}
               </div>
             </li>
           ))}
@@ -75,5 +79,12 @@ class Gallery extends React.PureComponent {
     );
   }
 }
+
+Gallery.propTypes = {
+  navigateToItem: PropTypes.func.isRequired,
+  isNavigatingBackFromItemPage: PropTypes.bool.isRequired,
+  cachedItems: PropTypes.array.isRequired,
+  itemIdFromItemPageRedirection: PropTypes.string
+};
 
 export default Gallery;
