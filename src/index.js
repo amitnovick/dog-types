@@ -1,14 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter } from "react-router-dom";
+import { Router } from "react-router-dom";
 import "normalize.css";
+
 import "./globalStyle.css";
 import CustomRouter from "./components/CustomRouter/CustomRouter";
+import history from "./history";
 
 ReactDOM.render(
-  <BrowserRouter>
+  <Router history={history}>
     <CustomRouter />
-  </BrowserRouter>,
+  </Router>,
   document.getElementById("root")
 );
 

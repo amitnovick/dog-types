@@ -4,21 +4,7 @@ import PropTypes from "prop-types";
 
 import ItemPage from "../../pages/ItemPage/ItemPage";
 import Gallery from "../../pages/Gallery/Gallery";
-
-class RouteReactingToLeave extends React.PureComponent {
-  componentWillUnmount() {
-    console.log("unmounting");
-    if (this.props.userFlowState === "galleryToItemPage") {
-      console.log("updating state");
-      this.props.extendUserFlowState();
-    }
-  }
-
-  render() {
-    const { children } = this.props;
-    return <>{children} </>;
-  }
-}
+import history from "../../history";
 
 class CustomRouter extends React.PureComponent {
   constructor(props) {
@@ -34,6 +20,19 @@ class CustomRouter extends React.PureComponent {
   saveGalleryPageItemsToCache = cachedGalleryPageItems => {
     this.setState({ cachedGalleryPageItems: cachedGalleryPageItems });
   };
+
+  componentDidMount() {
+    this.unblock = history.block((_, action) => {
+      if (action === "POP") {
+        if (this.state.userFlowState === "galleryToItemPage") {
+          this.setState({ userFlowState: "galleryToItemPageToGallery" });
+        }
+      }
+    });
+  }
+  componentWillUnmount() {
+    this.unblock();
+  }
 
   render() {
     const { history } = this.props;
@@ -67,20 +66,12 @@ class CustomRouter extends React.PureComponent {
         </Route>
         <Route exact path="/:itemId">
           {({ match }) => (
-            <RouteReactingToLeave
-              userFlowState={userFlowState}
-              extendUserFlowState={() => {
-                console.log("updating state callback");
-                this.setState({ userFlowState: "galleryToItemPageToGallery" });
-              }}
-            >
-              <ItemPage
-                itemId={match.params.itemId}
-                shouldDisplayBackToGalleryButton={
-                  userFlowState === "galleryToItemPage"
-                }
-              />
-            </RouteReactingToLeave>
+            <ItemPage
+              itemId={match.params.itemId}
+              shouldDisplayBackToGalleryButton={
+                userFlowState === "galleryToItemPage"
+              }
+            />
           )}
         </Route>
       </Switch>
