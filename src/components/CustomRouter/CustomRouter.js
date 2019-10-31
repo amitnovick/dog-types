@@ -13,6 +13,7 @@ class CustomRouter extends React.PureComponent {
     this.state = {
       userFlowState: "normal", // `normal` | `galleryToItemPage` | `galleryToItemPageToGallery`
       cachedGalleryPageItems: [],
+      cachedRenderedItemsLastIndex: null,
       itemIdFromItemPageRedirection: null
     };
   }
@@ -39,21 +40,20 @@ class CustomRouter extends React.PureComponent {
     const {
       userFlowState,
       cachedGalleryPageItems,
+      cachedRenderedItemsLastIndex,
       itemIdFromItemPageRedirection
     } = this.state;
-
-    console.log("history:", history);
-    console.log("userFlowState:", userFlowState);
 
     return (
       <Switch>
         <Route exact path="/">
           <Gallery
-            navigateToItem={(itemId, cachedItems) => {
+            navigateToItem={({ itemId, items, renderedItemsLastIndex }) => {
               this.setState({
                 userFlowState: "galleryToItemPage",
                 itemIdFromItemPageRedirection: itemId,
-                cachedGalleryPageItems: cachedItems
+                cachedGalleryPageItems: items,
+                cachedRenderedItemsLastIndex: renderedItemsLastIndex
               });
               history.push(`/${itemId}`);
             }}
@@ -61,6 +61,7 @@ class CustomRouter extends React.PureComponent {
               userFlowState === "galleryToItemPageToGallery"
             }
             cachedItems={cachedGalleryPageItems}
+            cachedRenderedItemsLastIndex={cachedRenderedItemsLastIndex}
             itemIdFromItemPageRedirection={itemIdFromItemPageRedirection}
           />
         </Route>

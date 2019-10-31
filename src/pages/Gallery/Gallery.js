@@ -10,12 +10,18 @@ const ITEMS_COUNT_PER_LOAD = 20;
 class Gallery extends React.PureComponent {
   constructor(props) {
     super(props);
-    const { isNavigatingBackFromItemPage, cachedItems } = props;
+    const {
+      isNavigatingBackFromItemPage,
+      cachedItems,
+      cachedRenderedItemsLastIndex
+    } = props;
 
     /* TODO: handle prop `itemIdFromItemPageRedirection` and scroll to it when `isNavigatingBackFromItemPage === true` */
     console.log("isNavigatingBackFromItemPage:", isNavigatingBackFromItemPage);
     this.state = {
-      renderedItemsLastIndex: 0,
+      renderedItemsLastIndex: isNavigatingBackFromItemPage
+        ? cachedRenderedItemsLastIndex
+        : 0,
       cachedItems: isNavigatingBackFromItemPage ? cachedItems : []
     };
   }
@@ -53,7 +59,7 @@ class Gallery extends React.PureComponent {
 
   render() {
     const { navigateToItem } = this.props;
-    const { cachedItems } = this.state;
+    const { cachedItems, renderedItemsLastIndex } = this.state;
     return (
       <>
         <ul>
@@ -66,7 +72,11 @@ class Gallery extends React.PureComponent {
                   color: cachedItem.color
                 }}
                 onClick={() =>
-                  navigateToItem(String(cachedItem.id), cachedItems)
+                  navigateToItem({
+                    itemId: String(cachedItem.id),
+                    items: cachedItems,
+                    renderedItemsLastIndex: renderedItemsLastIndex
+                  })
                 }
               >
                 {cachedItem.id}
@@ -83,7 +93,8 @@ class Gallery extends React.PureComponent {
 Gallery.propTypes = {
   navigateToItem: PropTypes.func.isRequired,
   isNavigatingBackFromItemPage: PropTypes.bool.isRequired,
-  cachedItems: PropTypes.array.isRequired,
+  cachedItems: PropTypes.array,
+  cachedRenderedItemsLastIndex: PropTypes.number,
   itemIdFromItemPageRedirection: PropTypes.string
 };
 
