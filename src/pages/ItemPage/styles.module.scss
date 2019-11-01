@@ -12,19 +12,3 @@
   height: 15rem;
   width: 50vw;
 }
-
-.backNavigationButtonRow {
-  width: 100vw;
-}
-
-.backNavigationButton {
-  margin-left: 2rem;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  outline: none;
-
-  &:hover {
-    opacity: 0.5;
-  }
-}

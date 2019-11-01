@@ -1,18 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { Router } from "react-router-dom";
 import "normalize.css";
 
 import "./globalStyle.css";
-import CustomRouter from "./components/CustomRouter/CustomRouter";
-import history from "./history";
+import App from "./components/App/App";
 
-ReactDOM.render(
-  <Router history={history}>
-    <CustomRouter />
-  </Router>,
-  document.getElementById("root")
-);
+ReactDOM.render(<App />, document.getElementById("root"));
 
 if (module.hot) {
   module.hot.accept();

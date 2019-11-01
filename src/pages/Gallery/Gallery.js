@@ -10,18 +10,10 @@ const ITEMS_COUNT_PER_LOAD = 20;
 class Gallery extends React.PureComponent {
   constructor(props) {
     super(props);
-    const {
-      isNavigatingBackFromItemPage,
-      cachedItems,
-      cachedRenderedItemsLastIndex
-    } = props;
 
-    /* TODO: handle prop `cachedItemIdFromItemPageRedirection` and scroll to it when `isNavigatingBackFromItemPage === true` */
     this.state = {
-      renderedItemsLastIndex: isNavigatingBackFromItemPage
-        ? cachedRenderedItemsLastIndex
-        : 0,
-      cachedItems: isNavigatingBackFromItemPage ? cachedItems : []
+      renderedItemsLastIndex: 0,
+      cachedItems: []
     };
   }
 
@@ -57,8 +49,8 @@ class Gallery extends React.PureComponent {
   };
 
   render() {
-    const { navigateToItem } = this.props;
-    const { cachedItems, renderedItemsLastIndex } = this.state;
+    const { openItemModal } = this.props;
+    const { cachedItems } = this.state;
     return (
       <>
         <ul>
@@ -70,13 +62,7 @@ class Gallery extends React.PureComponent {
                   backgroundColor: cachedItem.backgroundColor,
                   color: cachedItem.color
                 }}
-                onClick={() =>
-                  navigateToItem({
-                    itemId: String(cachedItem.id),
-                    items: cachedItems,
-                    renderedItemsLastIndex: renderedItemsLastIndex
-                  })
-                }
+                onClick={() => openItemModal(String(cachedItem.id))}
               >
                 {cachedItem.id}
               </div>
@@ -90,11 +76,7 @@ class Gallery extends React.PureComponent {
 }
 
 Gallery.propTypes = {
-  navigateToItem: PropTypes.func.isRequired,
-  isNavigatingBackFromItemPage: PropTypes.bool.isRequired,
-  cachedItems: PropTypes.array,
-  cachedRenderedItemsLastIndex: PropTypes.number,
-  cachedItemIdFromItemPageRedirection: PropTypes.string
+  openItemModal: PropTypes.func.isRequired
 };
 
 export default Gallery;
