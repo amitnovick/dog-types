@@ -48,18 +48,20 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
 
   return (
     <>
-      <div className="top-bar">
-        <div>
-          <DeckAll className="all" />
-        </div>
-        <div>
-          <DeckWrong className="fail" />
-        </div>
-        <div ref={successRef}>
-          <DeckCheckmark
-            className="success"
-            data-state={animationState === "moving" ? "consuming" : undefined}
-          />
+      <div className="top-bar-container">
+        <div className="top-bar">
+          <div>
+            <DeckAll className="all" />
+          </div>
+          <div>
+            <DeckWrong className="fail" />
+          </div>
+          <div ref={successRef}>
+            <DeckCheckmark
+              className="success"
+              data-state={animationState === "moving" ? "consuming" : undefined}
+            />
+          </div>
         </div>
       </div>
       <div className="content">

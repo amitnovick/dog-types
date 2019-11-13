@@ -4,6 +4,35 @@ $body-bg-color: beige;
   box-sizing: border-box;
 }
 
+/* for debugging */
+* {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+* * {
+  background-color: rgba(0, 255, 0, 0.2);
+}
+* * * {
+  background-color: rgba(0, 0, 255, 0.2);
+}
+* * * * {
+  background-color: rgba(255, 0, 255, 0.2);
+}
+* * * * * {
+  background-color: rgba(0, 255, 255, 0.2);
+}
+* * * * * * {
+  background-color: rgba(255, 255, 0, 0.2);
+}
+* * * * * * * {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+* * * * * * * * {
+  background-color: rgba(0, 255, 0, 0.2);
+}
+* * * * * * * * * {
+  background-color: rgba(0, 0, 255, 0.2);
+}
+
 body {
   font-family: sans-serif;
   background-color: $body-bg-color;
@@ -11,10 +40,18 @@ body {
 }
 
 #root {
-  height: 100vh;
-  width: 100vw;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem;
+  height: 100%;
+  width: 100%;
+}
+
+.top-bar-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .top-bar {
@@ -22,12 +59,12 @@ body {
   max-width: 30rem;
   display: flex;
   justify-content: space-between;
-  margin: 0 auto 2rem auto;
-  padding: 0.5rem 0.5rem 0 0.5rem;
 }
 
 %deck {
   height: 6rem;
+  max-height: 100%;
+  min-height: 2rem;
   width: 6rem;
   max-width: 100%;
   min-width: 2rem;
@@ -54,6 +91,7 @@ body {
 .content {
   display: flex;
   flex-direction: column;
+  align-items: center;
   height: 100%;
   width: 100%;
 }
@@ -61,16 +99,19 @@ body {
 .image-container {
   height: 20rem;
   width: 100%;
+  display: flex;
+  justify-content: center;
   margin-bottom: 2rem;
 }
 
 .square {
-  width: 20rem;
-  height: 20rem;
-  margin: 0 auto;
   display: block;
   position: absolute;
   opacity: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
 
   &[data-state="initial"] {
     position: static;
@@ -101,7 +142,6 @@ body {
 
 .choices {
   display: block;
-  margin: 0 auto;
   padding-inline-start: 0px;
   list-style: inside;
   list-style-type: decimal;
