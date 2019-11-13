@@ -1,53 +1,54 @@
-$li-bg-color: rgb(63, 173, 241);
+$body-bg-color: beige;
 
 * {
   box-sizing: border-box;
 }
 
 body {
-  height: 100vh;
   font-family: sans-serif;
+  background-color: $body-bg-color;
+  margin: 0;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
 }
 
 .top-bar {
-  height: 4rem;
   width: 100%;
+  max-width: 30rem;
   display: flex;
   justify-content: space-between;
+  margin: 0 auto 2rem auto;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
 
-  margin-bottom: 2rem;
-
-  & > div {
-    border: 2px solid grey;
-    border-radius: 8px;
-    padding: 12px;
-    vertical-align: middle;
-    line-height: 2rem;
-    font-weight: 700;
-    font-size: 1.5rem;
-  
-  }
+%deck {
+  height: 6rem;
+  width: 6rem;
+  max-width: 100%;
+  min-width: 2rem;
 }
 
 .all {
+  @extend %deck;
   color: grey;
 }
 
 .success {
+  @extend %deck;
   color: green;
-
   &[data-state="consuming"] {
     opacity: 0.5;
   }
 }
 
 .fail {
+  @extend %deck;
   color: red;
-}
-
-#root {
-  height: 100vh;
-  width: 100vw;
 }
 
 .content {
@@ -76,9 +77,7 @@ body {
     animation: slideAndFadeIn 1s;
     opacity: 1;
   }
-
 }
-
 
 @keyframes slideAndFadeIn {
   from {
@@ -124,18 +123,24 @@ body {
   & > li {
     cursor: pointer;
     user-select: none;
-    color: white;
-    background-color: $li-bg-color;
+    color: black;
+    background-color: transparent;
     border-radius: 6px;
-    border: 1px solid grey;
+    border: 2px solid black;
     margin-bottom: 4px;
     padding: 0 1rem;
-  
+
     font-size: 2rem;
   }
 
   & > li:hover {
-    background-color: darken($li-bg-color, 15%);
-  } 
+    background-color: darken($body-bg-color, 25%);
+  }
 }
 
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
