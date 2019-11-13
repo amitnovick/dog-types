@@ -89,6 +89,10 @@ body {
 .fail {
   @extend %deck;
   color: red;
+  &[data-state="consuming"] {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
 }
 
 .content {
@@ -156,10 +160,6 @@ body {
   &[data-state="moving"] {
     opacity: 0;
     animation: 0.3s fadeout;
-  }
-
-  &[data-state="top"] {
-    opacity: 0;
   }
 
   & > li {

@@ -8,8 +8,6 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 
 import "./styles.scss";
 
-const choices = ["malinois", "pinscher", "golden retriever"];
-
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
@@ -22,20 +20,23 @@ function preloadImage(url) {
   });
 }
 
-const AnimatedSquare = ({ imageUrl, onFinish }) => {
-  const successRef = React.useRef();
-  const [animationState, setAnimationState] = useState("initial");
+const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
+  const successDeckRef = React.useRef();
+  const failDeckRef = React.useRef();
+  const [cardState, setCardState] = useState("initial"); // 'initial' -> [ 'success' | 'fail' ]
   const [{ top, left, width, height }, setProperties] = useState({});
-  const moveSquare = () => {
-    if (animationState === "initial") {
-      setAnimationState("moving");
-      console.log("successRef:", successRef);
+  const moveSquare = choice => {
+    if (cardState === "initial") {
+      const didSucceed = onChose(choice);
+      const updatedCardState = didSucceed ? "success" : "fail";
+      const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
+      setCardState(updatedCardState);
       const {
         top,
         left,
         width,
         height
-      } = successRef.current.getBoundingClientRect();
+      } = destinationDeckRef.current.getBoundingClientRect();
       setProperties({
         top: top + 4,
         left: left + width / 4,
@@ -44,7 +45,6 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
       });
     }
   };
-  console.log("successRef:", successRef);
 
   return (
     <>
@@ -53,13 +53,16 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
           <div>
             <DeckAll className="all" />
           </div>
-          <div>
-            <DeckWrong className="fail" />
+          <div ref={failDeckRef}>
+            <DeckWrong
+              className="fail"
+              data-state={cardState === "fail" ? "consuming" : undefined}
+            />
           </div>
-          <div ref={successRef}>
+          <div ref={successDeckRef}>
             <DeckCheckmark
               className="success"
-              data-state={animationState === "moving" ? "consuming" : undefined}
+              data-state={cardState === "success" ? "consuming" : undefined}
             />
           </div>
         </div>
@@ -67,9 +70,8 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
       <div className="content">
         <div className="image-container">
           <Flipper
-            flipKey={animationState}
+            flipKey={cardState}
             onComplete={() => {
-              setAnimationState("top");
               onFinish();
             }}
           >
@@ -78,9 +80,9 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
                 src={imageUrl}
                 alt="dog"
                 className="square"
-                data-state={animationState}
+                data-state={cardState}
                 style={
-                  animationState === "moving"
+                  ["success", "fail"].includes(cardState)
                     ? {
                         top,
                         left,
@@ -93,9 +95,14 @@ const AnimatedSquare = ({ imageUrl, onFinish }) => {
             </Flipped>
           </Flipper>
         </div>
-        <ol className="choices" data-state={animationState}>
+        <ol
+          className="choices"
+          data-state={
+            ["success", "fail"].includes(cardState) ? "moving" : "initial"
+          }
+        >
           {choices.map(choice => (
-            <li onClick={moveSquare} key={choice}>
+            <li onClick={() => moveSquare(choice)} key={choice}>
               {choice}
             </li>
           ))}
@@ -110,15 +117,24 @@ const App = () => {
     currentDogID: 0,
     dogs: {
       0: {
-        imageUrl: "https://images.dog.ceo/breeds/malinois/n02105162_2079.jpg"
+        imageUrl: "https://images.dog.ceo/breeds/malinois/n02105162_2079.jpg",
+        breed: "malinois",
+        cardState: "initial",
+        choices: ["malinois", "pinscher", "golden-retriever"]
       },
       1: {
         imageUrl:
-          "https://images.dog.ceo/breeds/pointer-german/n02100236_5628.jpg"
+          "https://images.dog.ceo/breeds/pointer-german/n02100236_5628.jpg",
+        breed: "pointer-german",
+        cardState: "initial",
+        choices: ["hound-british", "pointer-german", "golden-retriever"]
       },
       2: {
         imageUrl:
-          "https://images.dog.ceo/breeds/hound-afghan/n02088094_10263.jpg"
+          "https://images.dog.ceo/breeds/hound-afghan/n02088094_10263.jpg",
+        breed: "hound-afghan",
+        cardState: "initial",
+        choices: ["pointer-german", "hound-british", "hound-afghan"]
       }
     },
     isLoading: true
@@ -162,6 +178,16 @@ const App = () => {
         <AnimatedSquare
           key={currentDogID}
           imageUrl={dogs[currentDogID].image.src}
+          choices={dogs[currentDogID].choices}
+          onChose={chosenBreed => {
+            const outcome = chosenBreed === dogs[currentDogID].breed;
+            setState(previousState => ({
+              ...previousState,
+              cardState: outcome
+            }));
+
+            return outcome;
+          }}
           onFinish={() =>
             setState(previousState => ({
               ...previousState,
