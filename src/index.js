@@ -115,6 +115,10 @@ const App = () => {
       1: {
         imageUrl:
           "https://images.dog.ceo/breeds/pointer-german/n02100236_5628.jpg"
+      },
+      2: {
+        imageUrl:
+          "https://images.dog.ceo/breeds/hound-afghan/n02088094_10263.jpg"
       }
     },
     isLoading: true
