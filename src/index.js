@@ -68,33 +68,32 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
         </div>
       </div>
       <div className="content">
-        <div className="image-container">
-          <Flipper
-            flipKey={cardState}
-            onComplete={() => {
-              onFinish();
-            }}
-          >
-            <Flipped flipId="square">
-              <img
-                src={imageUrl}
-                alt="dog"
-                className="square"
-                data-state={cardState}
-                style={
-                  ["success", "fail"].includes(cardState)
-                    ? {
-                        top,
-                        left,
-                        width,
-                        height
-                      }
-                    : {}
-                }
-              />
-            </Flipped>
-          </Flipper>
-        </div>
+        <Flipper
+          flipKey={cardState}
+          className="image-container"
+          onComplete={() => {
+            onFinish();
+          }}
+        >
+          <Flipped flipId="square">
+            <img
+              src={imageUrl}
+              alt="dog"
+              className="square"
+              data-state={cardState}
+              style={
+                ["success", "fail"].includes(cardState)
+                  ? {
+                      top,
+                      left,
+                      width,
+                      height
+                    }
+                  : {}
+              }
+            />
+          </Flipped>
+        </Flipper>
         <ol
           className="choices"
           data-state={
