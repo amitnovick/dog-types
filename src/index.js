@@ -74,36 +74,38 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
           onFinish();
         }}
       >
-        <Flipped flipId="square">
-          <div
-            className="content"
-            data-state={cardState}
-            style={
-              ["success", "fail"].includes(cardState)
-                ? {
-                    top,
-                    left,
-                    width,
-                    height
-                  }
-                : {}
+        <div
+          className="card"
+          data-state={cardState}
+          style={
+            ["success", "fail"].includes(cardState)
+              ? {
+                  top,
+                  left,
+                  width,
+                  height
+                }
+              : {}
+          }
+        >
+          <Flipped flipId="card-background">
+            <div className="card-background" />
+          </Flipped>
+
+          <img src={imageUrl} alt="dog" className="img" />
+          <ol
+            className="choices"
+            data-state={
+              ["success", "fail"].includes(cardState) ? "moving" : "initial"
             }
           >
-            <img src={imageUrl} alt="dog" className="square" />
-            <ol
-              className="choices"
-              data-state={
-                ["success", "fail"].includes(cardState) ? "moving" : "initial"
-              }
-            >
-              {choices.map(choice => (
-                <li onClick={() => moveSquare(choice)} key={choice}>
-                  {choice}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </Flipped>
+            {choices.map(choice => (
+              <li onClick={() => moveSquare(choice)} key={choice}>
+                {choice}
+              </li>
+            ))}
+          </ol>
+        </div>
       </Flipper>
     </>
   );
