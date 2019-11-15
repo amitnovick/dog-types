@@ -67,46 +67,44 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
           </div>
         </div>
       </div>
-      <div className="content">
-        <Flipper
-          flipKey={cardState}
-          className="image-container"
-          onComplete={() => {
-            onFinish();
-          }}
-        >
-          <Flipped flipId="square">
-            <img
-              src={imageUrl}
-              alt="dog"
-              className="square"
-              data-state={cardState}
-              style={
-                ["success", "fail"].includes(cardState)
-                  ? {
-                      top,
-                      left,
-                      width,
-                      height
-                    }
-                  : {}
+      <Flipper
+        flipKey={cardState}
+        className="flip-content-wrapper"
+        onComplete={() => {
+          onFinish();
+        }}
+      >
+        <Flipped flipId="square">
+          <div
+            className="content"
+            data-state={cardState}
+            style={
+              ["success", "fail"].includes(cardState)
+                ? {
+                    top,
+                    left,
+                    width,
+                    height
+                  }
+                : {}
+            }
+          >
+            <img src={imageUrl} alt="dog" className="square" />
+            <ol
+              className="choices"
+              data-state={
+                ["success", "fail"].includes(cardState) ? "moving" : "initial"
               }
-            />
-          </Flipped>
-        </Flipper>
-        <ol
-          className="choices"
-          data-state={
-            ["success", "fail"].includes(cardState) ? "moving" : "initial"
-          }
-        >
-          {choices.map(choice => (
-            <li onClick={() => moveSquare(choice)} key={choice}>
-              {choice}
-            </li>
-          ))}
-        </ol>
-      </div>
+            >
+              {choices.map(choice => (
+                <li onClick={() => moveSquare(choice)} key={choice}>
+                  {choice}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Flipped>
+      </Flipper>
     </>
   );
 };
