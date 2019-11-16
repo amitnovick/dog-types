@@ -125,10 +125,17 @@ body {
 }
 
 .card-background {
-  position: absolute;
+  /* The commented out properties should solve issues */
+  /* 
+  1. Parent card has `padding` that influences this background element's top position
+  2. Stretching to parent card's width/height messes with the border during animation
+  */
   top: 0;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  height: 30rem;
+  width: 40rem;
+  // width: 100%;
+  // height: 100%;
   background-color: white;
   border: 2px solid black;
   z-index: -1; /* Just for debuggin */
@@ -149,14 +156,6 @@ body {
 }
 
 /* **************** */
-@keyframes fadeout {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
 
 .choices {
   display: block;
@@ -165,12 +164,8 @@ body {
   list-style-type: decimal;
   display: block;
 
-  &[data-state="initial"] {
-  }
-
   &[data-state="moving"] {
     opacity: 0;
-    animation: 0.3s fadeout;
   }
 
   & > li {

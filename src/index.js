@@ -25,6 +25,7 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
   const failDeckRef = React.useRef();
   const [cardState, setCardState] = useState("initial"); // 'initial' -> [ 'success' | 'fail' ]
   const [{ top, left, width, height }, setProperties] = useState({});
+
   const moveSquare = choice => {
     if (cardState === "initial") {
       const didSucceed = onChose(choice);
