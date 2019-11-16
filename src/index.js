@@ -9,6 +9,8 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
 
+const BORDER_RADIUS = 8;
+
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
@@ -86,11 +88,14 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
               transform: `
             translate(${deltaX}px, ${deltaY}px)
             scale(${deltaW}, ${deltaH})
-          `
+          `,
+              borderRadius: `${BORDER_RADIUS * (1 / deltaW)}px ${BORDER_RADIUS *
+                (1 / deltaH)}px`
             },
             {
               transformOrigin: "top left",
-              transform: "none"
+              transform: "none",
+              borderRadius: `${BORDER_RADIUS}px ${BORDER_RADIUS}px`
             }
           ],
           {

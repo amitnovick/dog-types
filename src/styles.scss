@@ -97,7 +97,7 @@ body {
   2. Stretching to parent card's width/height messes with the border during animation
   */
   position: absolute;
-  // border-radius: 8px;
+  border-radius: 8px 8px;
   background-color: white;
   z-index: -1;
   &[data-state="initial"] {
