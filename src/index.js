@@ -7,6 +7,7 @@ import { ReactComponent as DeckWrong } from "./deck-wrong.svg";
 import { ReactComponent as DeckAll } from "./deck-all.svg";
 
 import "./styles.scss";
+import useSnapshot from "./useSnapshot";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -20,15 +21,93 @@ function preloadImage(url) {
   });
 }
 
-const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
+const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
   const successDeckRef = React.useRef();
   const failDeckRef = React.useRef();
+  const cardBackgroundRef = React.useRef();
   const [cardState, setCardState] = useState("initial"); // 'initial' -> [ 'success' | 'fail' ]
   const [{ top, left, width, height }, setProperties] = useState({});
+  const UseLayout = useSnapshot({
+    getSnapshot: (prevProps, prevState) => {
+      if (
+        (cardState === "fail" || cardState === "success") &&
+        prevProps.cardState === "initial"
+      ) {
+        // First
+        const {
+          top,
+          left,
+          width,
+          height
+        } = cardBackgroundRef.current.getBoundingClientRect();
+        const first = { top, left, width, height };
+        return first;
+      }
+    },
+    layoutEffect: first => {
+      if (!first) {
+        return;
+      } else {
+        const didSucceed = cardState === "success";
+        const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
 
+        // Last
+        const {
+          top,
+          left,
+          width,
+          height
+        } = destinationDeckRef.current.getBoundingClientRect();
+        const last = {
+          top: top + 4,
+          left: left + width / 4,
+          width: width / 2,
+          height: height - 8
+        };
+
+        console.log("first:", first);
+        console.log("last:", last);
+        console.log(
+          "success:",
+          destinationDeckRef.current.getBoundingClientRect()
+        );
+
+        // Inverse
+        const deltaX = first.left - last.left;
+        const deltaY = first.top - last.top;
+        const deltaW = first.width / last.width;
+        const deltaH = first.height / last.height;
+
+        // Play
+        const animation = cardBackgroundRef.current.animate(
+          [
+            {
+              transformOrigin: "top left",
+              transform: `
+            translate(${deltaX}px, ${deltaY}px)
+            scale(${deltaW}, ${deltaH})
+          `
+            },
+            {
+              transformOrigin: "top left",
+              transform: "none"
+            }
+          ],
+          {
+            duration: 600,
+            easing: "ease-in-out",
+            fill: "both"
+          }
+        );
+        animation.onfinish = () => {
+          onFinish();
+        };
+      }
+    }
+  });
   const moveSquare = choice => {
     if (cardState === "initial") {
-      const didSucceed = onChose(choice);
+      const didSucceed = onChoose(choice);
       const updatedCardState = didSucceed ? "success" : "fail";
       const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
       setCardState(updatedCardState);
@@ -46,6 +125,8 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
       });
     }
   };
+
+  console.log("top:", top);
 
   return (
     <>
@@ -68,32 +149,36 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
           </div>
         </div>
       </div>
-      <Flipper
-        flipKey={cardState}
-        className="flip-content-wrapper"
-        onComplete={() => {
-          onFinish();
-        }}
-      >
-        <div
-          className="card"
-          data-state={cardState}
-          style={
-            ["success", "fail"].includes(cardState)
-              ? {
-                  top,
-                  left,
-                  width,
-                  height
-                }
-              : {}
-          }
-        >
-          <Flipped flipId="card-background">
-            <div className="card-background" />
-          </Flipped>
+      <div className="flip-content-wrapper">
+        <div className="card" data-state={cardState}>
+          <UseLayout cardState={cardState}>
+            <div
+              className="card-background"
+              ref={cardBackgroundRef}
+              data-state={cardState}
+              style={
+                ["success", "fail"].includes(cardState)
+                  ? {
+                      top,
+                      left,
+                      width,
+                      height
+                    }
+                  : {}
+              }
+            />
+          </UseLayout>
 
-          <img src={imageUrl} alt="dog" className="img" />
+          <img
+            src={imageUrl}
+            alt="dog"
+            className="img"
+            data-state={
+              cardState === "success" || cardState === "fail"
+                ? "moving"
+                : undefined
+            }
+          />
           <ol
             className="choices"
             data-state={
@@ -107,7 +192,7 @@ const AnimatedSquare = ({ imageUrl, choices, onFinish, onChose }) => {
             ))}
           </ol>
         </div>
-      </Flipper>
+      </div>
     </>
   );
 };
@@ -175,11 +260,11 @@ const App = () => {
           style={{ opacity: 0.1 }}
         />
       ) : (
-        <AnimatedSquare
+        <Page
           key={currentDogID}
           imageUrl={dogs[currentDogID].image.src}
           choices={dogs[currentDogID].choices}
-          onChose={chosenBreed => {
+          onChoose={chosenBreed => {
             const outcome = chosenBreed === dogs[currentDogID].breed;
             setState(previousState => ({
               ...previousState,

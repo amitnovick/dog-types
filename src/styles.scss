@@ -4,35 +4,6 @@ $body-bg-color: darken(white, 15%);
   box-sizing: border-box;
 }
 
-/* for debugging */
-/* * {
-  background-color: rgba(255, 0, 0, 0.2);
-}
-* * {
-  background-color: rgba(0, 255, 0, 0.2);
-}
-* * * {
-  background-color: rgba(0, 0, 255, 0.2);
-}
-* * * * {
-  background-color: rgba(255, 0, 255, 0.2);
-}
-* * * * * {
-  background-color: rgba(0, 255, 255, 0.2);
-}
-* * * * * * {
-  background-color: rgba(255, 255, 0, 0.2);
-}
-* * * * * * * {
-  background-color: rgba(255, 0, 0, 0.2);
-}
-* * * * * * * * {
-  background-color: rgba(0, 255, 0, 0.2);
-}
-* * * * * * * * * {
-  background-color: rgba(0, 0, 255, 0.2);
-}
- */
 body {
   font-family: sans-serif;
   background-color: $body-bg-color;
@@ -105,7 +76,6 @@ body {
 }
 
 .card {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,12 +85,8 @@ body {
   padding: 1.5rem;
 
   &[data-state="initial"] {
+    position: relative;
     animation: 1s slideAndFadeIn;
-  }
-
-  &[data-state="success"],
-  &[data-state="fail"] {
-    position: absolute;
   }
 }
 
@@ -130,12 +96,15 @@ body {
   1. Parent card has `padding` that influences this background element's top position
   2. Stretching to parent card's width/height messes with the border during animation
   */
-  top: 0;
   position: absolute;
-  width: 100%;
-  height: 100%;
+  // border-radius: 8px;
   background-color: white;
-  z-index: -1; /* Just for debuggin */
+  z-index: -1;
+  &[data-state="initial"] {
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .flip-content-wrapper {
@@ -150,6 +119,10 @@ body {
   height: 18rem;
 
   width: 100%;
+
+  &[data-state="moving"] {
+    visibility: hidden;
+  }
 }
 
 /* **************** */
