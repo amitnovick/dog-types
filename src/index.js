@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { CircularProgress } from "@material-ui/core";
 import { ReactComponent as DeckCheckmark } from "./deck-checkmark.svg";
@@ -232,9 +232,14 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
               ["success", "fail"].includes(cardState) ? "moving" : "initial"
             }
           >
-            {choices.map(choice => (
-              <li onClick={() => moveSquare(choice)} key={choice}>
-                {choice}
+            {choices.map((choice, index) => (
+              <li
+                onClick={() => moveSquare(choice)}
+                key={choice}
+                className="choice-li"
+              >
+                <div className="choice-index-circle">{index + 1}</div>
+                <span className="choice-text">{choice}</span>
               </li>
             ))}
           </ol>
