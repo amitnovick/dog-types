@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { Flipper, Flipped } from "react-flip-toolkit";
 import { CircularProgress } from "@material-ui/core";
 import { ReactComponent as DeckCheckmark } from "./deck-checkmark.svg";
 import { ReactComponent as DeckWrong } from "./deck-wrong.svg";
@@ -9,7 +8,8 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
 
-const BORDER_RADIUS = 8;
+const BORDER_RADIUS = 12;
+const BORDER_WIDTH = 3;
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -67,18 +67,14 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
           height: height - 8
         };
 
-        console.log("first:", first);
-        console.log("last:", last);
-        console.log(
-          "success:",
-          destinationDeckRef.current.getBoundingClientRect()
-        );
-
         // Inverse
         const deltaX = first.left - last.left;
         const deltaY = first.top - last.top;
         const deltaW = first.width / last.width;
         const deltaH = first.height / last.height;
+
+        const updatedRadius = `${BORDER_RADIUS *
+          (1 / deltaW)}px ${BORDER_RADIUS * (1 / deltaH)}px`;
 
         // Play
         const animation = cardBackgroundRef.current.animate(
@@ -87,15 +83,21 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
               transformOrigin: "top left",
               transform: `
             translate(${deltaX}px, ${deltaY}px)
-            scale(${deltaW}, ${deltaH})
+            
           `,
-              borderRadius: `${BORDER_RADIUS * (1 / deltaW)}px ${BORDER_RADIUS *
-                (1 / deltaH)}px`
+              opacity: 1,
+              width: `${first.width}px`,
+              height: `${first.height}px`
+              // borderWidth: `${BORDER_WIDTH * (1 / deltaH)}px ${BORDER_WIDTH *
+              //   (1 / deltaW)}px`
             },
             {
               transformOrigin: "top left",
               transform: "none",
-              borderRadius: `${BORDER_RADIUS}px ${BORDER_RADIUS}px`
+              opacity: 0,
+              width: `${last.width}px`,
+              height: `${last.height}px`
+              // borderWidth: `${BORDER_WIDTH}px`
             }
           ],
           {
@@ -130,8 +132,6 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
       });
     }
   };
-
-  console.log("top:", top);
 
   return (
     <>
