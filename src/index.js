@@ -8,9 +8,6 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
 
-const BORDER_RADIUS = 12;
-const BORDER_WIDTH = 3;
-
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
@@ -23,12 +20,35 @@ function preloadImage(url) {
   });
 }
 
+const getProperties = element => {
+  const { top, left, width, height } = element.getBoundingClientRect();
+  const properties = { top, left, width, height };
+  return properties;
+};
+
+const getDeltas = ({ first, last }) => {
+  const deltaX = first.left - last.left;
+  const deltaY = first.top - last.top;
+  const deltaW = first.width / last.width;
+  const deltaH = first.height / last.height;
+
+  return { deltaX, deltaY, deltaW, deltaH };
+};
+
 const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
   const successDeckRef = React.useRef();
   const failDeckRef = React.useRef();
   const cardBackgroundRef = React.useRef();
-  const [cardState, setCardState] = useState("initial"); // 'initial' -> [ 'success' | 'fail' ]
-  const [{ top, left, width, height }, setProperties] = useState({});
+  const imageRef = React.useRef();
+  const [
+    { cardState, cardBackgroundProperties, imageProperties },
+    setState
+  ] = React.useState({
+    cardState: "initial", // 'initial' -> [ 'success' | 'fail' ]
+    cardBackgroundProperties: {},
+    imageProperties: {}
+  });
+
   const UseLayout = useSnapshot({
     getSnapshot: (prevProps, prevState) => {
       if (
@@ -36,68 +56,49 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
         prevProps.cardState === "initial"
       ) {
         // First
-        const {
-          top,
-          left,
-          width,
-          height
-        } = cardBackgroundRef.current.getBoundingClientRect();
-        const first = { top, left, width, height };
-        return first;
+        const firstCardBackground = getProperties(cardBackgroundRef.current);
+        const firstImage = getProperties(imageRef.current);
+        return { firstCardBackground, firstImage };
       }
     },
-    layoutEffect: first => {
-      if (!first) {
+    layoutEffect: ({ firstCardBackground, firstImage }) => {
+      if (!firstCardBackground || !firstImage) {
         return;
       } else {
-        const didSucceed = cardState === "success";
-        const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
-
         // Last
-        const {
-          top,
-          left,
-          width,
-          height
-        } = destinationDeckRef.current.getBoundingClientRect();
-        const last = {
-          top: top + 4,
-          left: left + width / 4,
-          width: width / 2,
-          height: height - 8
-        };
+        const lastCardBackground = cardBackgroundProperties;
+
+        const lastImage = imageProperties;
 
         // Inverse
-        const deltaX = first.left - last.left;
-        const deltaY = first.top - last.top;
-        const deltaW = first.width / last.width;
-        const deltaH = first.height / last.height;
+        const deltasCardBackground = getDeltas({
+          first: firstCardBackground,
+          last: lastCardBackground
+        });
 
-        const updatedRadius = `${BORDER_RADIUS *
-          (1 / deltaW)}px ${BORDER_RADIUS * (1 / deltaH)}px`;
+        const deltasImage = getDeltas({ first: firstImage, last: lastImage });
 
         // Play
-        const animation = cardBackgroundRef.current.animate(
+        const cardBackgroundAnimation = cardBackgroundRef.current.animate(
           [
             {
               transformOrigin: "top left",
               transform: `
-            translate(${deltaX}px, ${deltaY}px)
+            translate(${deltasCardBackground.deltaX}px, ${
+                deltasCardBackground.deltaY
+              }px)
             
           `,
               opacity: 1,
-              width: `${first.width}px`,
-              height: `${first.height}px`
-              // borderWidth: `${BORDER_WIDTH * (1 / deltaH)}px ${BORDER_WIDTH *
-              //   (1 / deltaW)}px`
+              width: `${firstCardBackground.width}px`,
+              height: `${firstCardBackground.height}px`
             },
             {
               transformOrigin: "top left",
               transform: "none",
               opacity: 0,
-              width: `${last.width}px`,
-              height: `${last.height}px`
-              // borderWidth: `${BORDER_WIDTH}px`
+              width: `${lastCardBackground.width}px`,
+              height: `${lastCardBackground.height}px`
             }
           ],
           {
@@ -106,7 +107,31 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
             fill: "both"
           }
         );
-        animation.onfinish = () => {
+
+        imageRef.current.animate(
+          [
+            {
+              transformOrigin: "top left",
+              transform: `
+            translate(${deltasImage.deltaX}px, ${deltasImage.deltaY}px)
+              scale(${deltasImage.deltaW}, ${deltasImage.deltaH})
+          `,
+              opacity: 1
+            },
+            {
+              transformOrigin: "top left",
+              transform: "none",
+              opacity: 0
+            }
+          ],
+          {
+            duration: 600,
+            easing: "ease-in-out",
+            fill: "both"
+          }
+        );
+
+        cardBackgroundAnimation.onfinish = () => {
           onFinish();
         };
       }
@@ -117,19 +142,37 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
       const didSucceed = onChoose(choice);
       const updatedCardState = didSucceed ? "success" : "fail";
       const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
-      setCardState(updatedCardState);
+      setState(previousState => ({
+        ...previousState,
+        cardState: updatedCardState
+      }));
       const {
-        top,
-        left,
-        width,
-        height
+        top: cardBackgroundTop,
+        left: cardBackgroundLeft,
+        width: cardBackgroundWidth,
+        height: cardBackgroundHeight
       } = destinationDeckRef.current.getBoundingClientRect();
-      setProperties({
-        top: top + 4,
-        left: left + width / 4,
-        width: width / 2,
-        height: height - 8
-      });
+      const updatedCardBackgroundProperties = {
+        top: cardBackgroundTop + 4,
+        left: cardBackgroundLeft + cardBackgroundWidth / 4,
+        width: cardBackgroundWidth / 2,
+        height: cardBackgroundHeight - 8
+      };
+      setState(previousState => ({
+        ...previousState,
+        cardBackgroundProperties: updatedCardBackgroundProperties
+      }));
+
+      const updatedImageProperties = {
+        top: updatedCardBackgroundProperties.top + 4,
+        left: updatedCardBackgroundProperties.left + 4,
+        width: updatedCardBackgroundProperties.width - 10,
+        height: updatedCardBackgroundProperties.height / 2
+      };
+      setState(previousState => ({
+        ...previousState,
+        imageProperties: updatedImageProperties
+      }));
     }
   };
 
@@ -163,12 +206,7 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
               data-state={cardState}
               style={
                 ["success", "fail"].includes(cardState)
-                  ? {
-                      top,
-                      left,
-                      width,
-                      height
-                    }
+                  ? cardBackgroundProperties
                   : {}
               }
             />
@@ -178,6 +216,10 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
             src={imageUrl}
             alt="dog"
             className="img"
+            ref={imageRef}
+            style={
+              ["success", "fail"].includes(cardState) ? imageProperties : {}
+            }
             data-state={
               cardState === "success" || cardState === "fail"
                 ? "moving"
