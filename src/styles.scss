@@ -1,6 +1,6 @@
 $body-bg-color: darken(white, 15%);
 $choice-font-size: 2rem;
-$color: goldenrod;
+$color: #c97f20;
 
 * {
   box-sizing: border-box;
@@ -13,9 +13,6 @@ body {
 }
 
 #root {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   padding: 0.5rem;
   height: 100%;
   width: 100%;
@@ -83,12 +80,14 @@ body {
   align-items: center;
   height: auto;
   width: 100%;
-  max-width: 30rem;
   padding: 1.5rem;
 
-  &[data-state="initial"] {
-    position: relative;
-    animation: 1s slideAndFadeIn;
+  position: relative;
+  animation: 1s slideAndFadeIn;
+
+  &[data-state="moving"] {
+    /* TODO: use this! */
+    position: static;
   }
 }
 
@@ -106,18 +105,20 @@ body {
   background-color: white;
 
   z-index: -1;
-  &[data-state="initial"] {
-    top: 0;
-    width: 100%;
-    height: 100%;
-  }
+
+  /* The followingvalues will be overridden by inline style when the card moves toward a deck*/
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.flip-content-wrapper {
+.main-section {
   height: auto;
+  max-width: 30rem;
 
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
 }
 
 .img {
@@ -133,6 +134,7 @@ body {
 
 /* **************** */
 .question {
+  margin: 0.5rem 0 0 0;
   visibility: visible;
   &[data-state="gone"] {
     visibility: hidden;
@@ -163,8 +165,12 @@ body {
     margin-bottom: 0;
   }
 
-  &:hover {
+  &[data-state="initial"]:hover {
     background-color: rgba($color, 0.3);
+  }
+
+  &[data-state="chosen"] {
+    background-color: $color;
   }
 }
 
@@ -172,15 +178,15 @@ body {
   cursor: pointer;
   display: block;
   user-select: none;
-  color: black;
   background-color: transparent;
   margin-bottom: 4px;
   padding: 0 1rem;
 
   font-size: $choice-font-size;
+  font-weight: 700;
 }
 
-.choice-index-circle {
+.choice-alphabet {
   cursor: pointer;
 
   user-select: none;
@@ -196,9 +202,13 @@ body {
   text-align: center;
   display: flex;
 
-  color: darken($color, 15%);
-  .choice-li:hover & {
-    color: black;
+  &[data-state="initial"],
+  &[data-state="not-chosen"] {
+    color: $color;
+  }
+
+  &[data-state="chosen"] {
+    color: white;
   }
 }
 

@@ -4,9 +4,11 @@ import { CircularProgress } from "@material-ui/core";
 import { ReactComponent as DeckCheckmark } from "./deck-checkmark.svg";
 import { ReactComponent as DeckWrong } from "./deck-wrong.svg";
 import { ReactComponent as DeckAll } from "./deck-all.svg";
+import { StylesProvider } from "@material-ui/core/styles";
 
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
+import Timer from "./Timer/Timer";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -41,19 +43,49 @@ const indexToAlphabet = {
   2: "C"
 };
 
+const machine = {
+  initial: "initial",
+  states: {
+    initial: {
+      on: { CLICKED_CHOICE: "chosen" }
+    },
+    chosen: {
+      on: { CHOICE_DISPLAY_TIMEOUT: "revealingAnswer" }
+    },
+    revealingAnswer: {
+      on: { ANSWER_REVEAL_TIMEOUT: "moving" }
+    },
+    moving: {}
+  }
+};
+
+const transition = (state, event) => {
+  return machine.states[state].on[event] || state;
+};
+
 const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
   const successDeckRef = React.useRef();
   const failDeckRef = React.useRef();
   const cardBackgroundRef = React.useRef();
   const imageRef = React.useRef();
   const [
-    { cardState, cardBackgroundProperties, imageProperties },
+    {
+      cardState,
+      isChoiceCorrect,
+      chosenChoice,
+      cardBackgroundProperties,
+      imageProperties
+    },
     setState
   ] = React.useState({
-    cardState: "initial", // 'initial' -> [ 'success' | 'fail' ]
+    cardState: machine.initial,
+    isChoiceCorrect: null,
+    chosenChoice: null,
     cardBackgroundProperties: {},
     imageProperties: {}
   });
+
+  console.log("cardState:", cardState);
 
   const UseLayout = useSnapshot({
     getSnapshot: (prevProps, prevState) => {
@@ -65,6 +97,8 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
         const firstCardBackground = getProperties(cardBackgroundRef.current);
         const firstImage = getProperties(imageRef.current);
         return { firstCardBackground, firstImage };
+      } else {
+        return { firstCardBackground: null, firstImage: null };
       }
     },
     layoutEffect: ({ firstCardBackground, firstImage }) => {
@@ -143,11 +177,10 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
       }
     }
   });
-  const moveSquare = choice => {
-    if (cardState === "initial") {
-      const didSucceed = onChoose(choice);
-      const updatedCardState = didSucceed ? "success" : "fail";
-      const destinationDeckRef = didSucceed ? successDeckRef : failDeckRef;
+  const moveSquare = () => {
+    if (cardState === "revealingAnswer") {
+      const updatedCardState = transition(cardState, "ANSWER_REVEAL_TIMEOUT");
+      const destinationDeckRef = isChoiceCorrect ? successDeckRef : failDeckRef;
       setState(previousState => ({
         ...previousState,
         cardState: updatedCardState
@@ -203,7 +236,7 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
           </div>
         </div>
       </div>
-      <div className="flip-content-wrapper">
+      <div className="main-section">
         <div className="card" data-state={cardState}>
           <UseLayout cardState={cardState}>
             <div
@@ -250,11 +283,42 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
           >
             {choices.map((choice, index) => (
               <li
-                onClick={() => moveSquare(choice)}
+                onClick={() => {
+                  if (cardState === "initial") {
+                    const isChoiceCorrect = onChoose(choice);
+                    const updatedCardState = transition(
+                      cardState,
+                      "CLICKED_CHOICE"
+                    );
+                    setState(previousState => ({
+                      ...previousState,
+                      cardState: updatedCardState,
+                      chosenChoice: choice,
+                      isChoiceCorrect: isChoiceCorrect
+                    }));
+                  }
+                  // moveSquare(choice)
+                }}
                 key={choice}
                 className="choice-li"
+                data-state={
+                  cardState === "initial"
+                    ? "initial"
+                    : cardState === "chosen" && chosenChoice === choice
+                    ? "chosen"
+                    : undefined
+                }
               >
-                <div className="choice-index-circle">
+                <div
+                  className="choice-alphabet"
+                  data-state={
+                    cardState === "initial"
+                      ? "initial"
+                      : cardState === "chosen" && chosenChoice === choice
+                      ? "chosen"
+                      : "not-chosen"
+                  }
+                >
                   {`${indexToAlphabet[index]}:`}
                 </div>
                 <span className="choice-text">{choice}</span>
@@ -262,6 +326,7 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
             ))}
           </ol>
         </div>
+        <Timer />
       </div>
     </>
   );
@@ -322,7 +387,7 @@ const App = () => {
   }, []);
 
   return (
-    <>
+    <StylesProvider injectFirst>
       {isLoading ? (
         <CircularProgress
           className="spinner"
@@ -330,28 +395,30 @@ const App = () => {
           style={{ opacity: 0.1 }}
         />
       ) : (
-        <Page
-          key={currentDogID}
-          imageUrl={dogs[currentDogID].image.src}
-          choices={dogs[currentDogID].choices}
-          onChoose={chosenBreed => {
-            const outcome = chosenBreed === dogs[currentDogID].breed;
-            setState(previousState => ({
-              ...previousState,
-              cardState: outcome
-            }));
+        <>
+          <Page
+            key={currentDogID}
+            imageUrl={dogs[currentDogID].image.src}
+            choices={dogs[currentDogID].choices}
+            onChoose={chosenBreed => {
+              const outcome = chosenBreed === dogs[currentDogID].breed;
+              setState(previousState => ({
+                ...previousState,
+                cardState: outcome
+              }));
 
-            return outcome;
-          }}
-          onFinish={() =>
-            setState(previousState => ({
-              ...previousState,
-              currentDogID: mod(currentDogID + 1, Object.keys(dogs).length)
-            }))
-          }
-        />
+              return outcome;
+            }}
+            onFinish={() =>
+              setState(previousState => ({
+                ...previousState,
+                currentDogID: mod(currentDogID + 1, Object.keys(dogs).length)
+              }))
+            }
+          />
+        </>
       )}
-    </>
+    </StylesProvider>
   );
 };
 

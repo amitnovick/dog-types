@@ -1,0 +1,29 @@
+$red-color: #ff6c5c;
+
+.timer-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.numeric-timer {
+  margin-right: 0.5rem;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: lighten($red-color, 20%);
+  flex-grow: 1;
+}
+
+.progress-bar > div {
+  border-radius: 20px;
+  background-color: $red-color;
+}
+
+.progress-bar[data-state="ending"] > div {
+  transition: none;
+}
