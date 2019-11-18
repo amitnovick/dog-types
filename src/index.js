@@ -35,6 +35,12 @@ const getDeltas = ({ first, last }) => {
   return { deltaX, deltaY, deltaW, deltaH };
 };
 
+const indexToAlphabet = {
+  0: "A",
+  1: "B",
+  2: "C"
+};
+
 const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
   const successDeckRef = React.useRef();
   const failDeckRef = React.useRef();
@@ -226,6 +232,7 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
                 : undefined
             }
           />
+          <h2>Which dog breed is it?</h2>
           <ol
             className="choices"
             data-state={
@@ -238,7 +245,9 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
                 key={choice}
                 className="choice-li"
               >
-                <div className="choice-index-circle">{index + 1}</div>
+                <div className="choice-index-circle">
+                  {`${indexToAlphabet[index]}:`}
+                </div>
                 <span className="choice-text">{choice}</span>
               </li>
             ))}
