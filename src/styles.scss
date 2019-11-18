@@ -132,6 +132,12 @@ body {
 }
 
 /* **************** */
+.question {
+  visibility: visible;
+  &[data-state="gone"] {
+    visibility: hidden;
+  }
+}
 
 .choices {
   display: block;

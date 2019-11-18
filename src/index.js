@@ -232,7 +232,16 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
                 : undefined
             }
           />
-          <h2>Which dog breed is it?</h2>
+          <h2
+            className="question"
+            data-state={
+              (cardState === "success") | (cardState === "fail")
+                ? "gone"
+                : undefined
+            }
+          >
+            Which dog breed is it?
+          </h2>
           <ol
             className="choices"
             data-state={
