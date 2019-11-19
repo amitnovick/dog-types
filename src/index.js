@@ -8,10 +8,9 @@ import { StylesProvider } from "@material-ui/core/styles";
 
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
-import Timer from "./Timer/Timer";
-import useTimer from "./Timer/useTimer";
-
-const TIMER_DURATION_MS = 5000;
+import useTimer from "./ProgressBar/useTimer";
+import TimerContext from "./ProgressBar/TimerContext";
+import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -66,276 +65,299 @@ const transition = (state, event) => {
   return machine.states[state].on[event] || state;
 };
 
-const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
-  const successDeckRef = React.useRef();
-  const failDeckRef = React.useRef();
-  const cardBackgroundRef = React.useRef();
-  const imageRef = React.useRef();
-  const [
-    {
-      cardState,
-      isChoiceCorrect,
-      chosenChoice,
-      cardBackgroundProperties,
-      imageProperties
-    },
-    setState
-  ] = React.useState({
-    cardState: machine.initial,
-    isChoiceCorrect: null,
-    chosenChoice: null,
-    cardBackgroundProperties: {},
-    imageProperties: {}
-  });
-  const [timer, cancelTimer] = useTimer({
-    onTimeout: () => console.log("timed out"),
-    duration: TIMER_DURATION_MS
-  });
+const Page = React.memo(
+  ({ imageUrl, choices, onFinish, onChoose, cancelTimer }) => {
+    const successDeckRef = React.useRef();
+    const failDeckRef = React.useRef();
+    const cardBackgroundRef = React.useRef();
+    const imageRef = React.useRef();
+    const [
+      {
+        cardState,
+        isChoiceCorrect,
+        chosenChoice,
+        cardBackgroundProperties,
+        imageProperties
+      },
+      setState
+    ] = React.useState({
+      cardState: machine.initial,
+      isChoiceCorrect: null,
+      chosenChoice: null,
+      cardBackgroundProperties: {},
+      imageProperties: {}
+    });
 
-  console.log("cardState:", cardState);
+    React.useEffect(() => {
+      setTimeout(() => {
+        cancelTimer();
+      }, 2000);
+    }, []);
 
-  const UseLayout = useSnapshot({
-    getSnapshot: (prevProps, prevState) => {
-      if (
-        (cardState === "fail" || cardState === "success") &&
-        prevProps.cardState === "initial"
-      ) {
-        // First
-        const firstCardBackground = getProperties(cardBackgroundRef.current);
-        const firstImage = getProperties(imageRef.current);
-        return { firstCardBackground, firstImage };
-      } else {
-        return { firstCardBackground: null, firstImage: null };
-      }
-    },
-    layoutEffect: ({ firstCardBackground, firstImage }) => {
-      if (!firstCardBackground || !firstImage) {
-        return;
-      } else {
-        // Last
-        const lastCardBackground = cardBackgroundProperties;
+    console.log("cardState:", cardState);
 
-        const lastImage = imageProperties;
+    const UseLayout = useSnapshot({
+      getSnapshot: (prevProps, prevState) => {
+        if (
+          (cardState === "fail" || cardState === "success") &&
+          prevProps.cardState === "initial"
+        ) {
+          // First
+          const firstCardBackground = getProperties(cardBackgroundRef.current);
+          const firstImage = getProperties(imageRef.current);
+          return { firstCardBackground, firstImage };
+        } else {
+          return { firstCardBackground: null, firstImage: null };
+        }
+      },
+      layoutEffect: ({ firstCardBackground, firstImage }) => {
+        if (!firstCardBackground || !firstImage) {
+          return;
+        } else {
+          // Last
+          const lastCardBackground = cardBackgroundProperties;
 
-        // Inverse
-        const deltasCardBackground = getDeltas({
-          first: firstCardBackground,
-          last: lastCardBackground
-        });
+          const lastImage = imageProperties;
 
-        const deltasImage = getDeltas({ first: firstImage, last: lastImage });
+          // Inverse
+          const deltasCardBackground = getDeltas({
+            first: firstCardBackground,
+            last: lastCardBackground
+          });
 
-        // Play
-        const cardBackgroundAnimation = cardBackgroundRef.current.animate(
-          [
-            {
-              transformOrigin: "top left",
-              transform: `
+          const deltasImage = getDeltas({ first: firstImage, last: lastImage });
+
+          // Play
+          const cardBackgroundAnimation = cardBackgroundRef.current.animate(
+            [
+              {
+                transformOrigin: "top left",
+                transform: `
             translate(${deltasCardBackground.deltaX}px, ${
-                deltasCardBackground.deltaY
-              }px)
+                  deltasCardBackground.deltaY
+                }px)
             
           `,
-              opacity: 1,
-              width: `${firstCardBackground.width}px`,
-              height: `${firstCardBackground.height}px`
-            },
+                opacity: 1,
+                width: `${firstCardBackground.width}px`,
+                height: `${firstCardBackground.height}px`
+              },
+              {
+                transformOrigin: "top left",
+                transform: "none",
+                opacity: 0,
+                width: `${lastCardBackground.width}px`,
+                height: `${lastCardBackground.height}px`
+              }
+            ],
             {
-              transformOrigin: "top left",
-              transform: "none",
-              opacity: 0,
-              width: `${lastCardBackground.width}px`,
-              height: `${lastCardBackground.height}px`
+              duration: 600,
+              easing: "ease-in-out",
+              fill: "both"
             }
-          ],
-          {
-            duration: 600,
-            easing: "ease-in-out",
-            fill: "both"
-          }
-        );
+          );
 
-        imageRef.current.animate(
-          [
-            {
-              transformOrigin: "top left",
-              transform: `
+          imageRef.current.animate(
+            [
+              {
+                transformOrigin: "top left",
+                transform: `
             translate(${deltasImage.deltaX}px, ${deltasImage.deltaY}px)
               scale(${deltasImage.deltaW}, ${deltasImage.deltaH})
           `,
-              opacity: 1
-            },
+                opacity: 1
+              },
+              {
+                transformOrigin: "top left",
+                transform: "none",
+                opacity: 0
+              }
+            ],
             {
-              transformOrigin: "top left",
-              transform: "none",
-              opacity: 0
+              duration: 600,
+              easing: "ease-in-out",
+              fill: "both"
             }
-          ],
-          {
-            duration: 600,
-            easing: "ease-in-out",
-            fill: "both"
-          }
-        );
+          );
 
-        cardBackgroundAnimation.onfinish = () => {
-          onFinish();
-        };
+          cardBackgroundAnimation.onfinish = () => {
+            onFinish();
+          };
+        }
       }
-    }
-  });
-  const moveSquare = () => {
-    if (cardState === "revealingAnswer") {
-      const updatedCardState = transition(cardState, "ANSWER_REVEAL_TIMEOUT");
-      const destinationDeckRef = isChoiceCorrect ? successDeckRef : failDeckRef;
-      setState(previousState => ({
-        ...previousState,
-        cardState: updatedCardState
-      }));
-      const {
-        top: cardBackgroundTop,
-        left: cardBackgroundLeft,
-        width: cardBackgroundWidth,
-        height: cardBackgroundHeight
-      } = destinationDeckRef.current.getBoundingClientRect();
-      const updatedCardBackgroundProperties = {
-        top: cardBackgroundTop + 4,
-        left: cardBackgroundLeft + cardBackgroundWidth / 4,
-        width: cardBackgroundWidth / 2,
-        height: cardBackgroundHeight - 8
-      };
-      setState(previousState => ({
-        ...previousState,
-        cardBackgroundProperties: updatedCardBackgroundProperties
-      }));
+    });
+    const moveSquare = () => {
+      if (cardState === "revealingAnswer") {
+        const updatedCardState = transition(cardState, "ANSWER_REVEAL_TIMEOUT");
+        const destinationDeckRef = isChoiceCorrect
+          ? successDeckRef
+          : failDeckRef;
+        setState(previousState => ({
+          ...previousState,
+          cardState: updatedCardState
+        }));
+        const {
+          top: cardBackgroundTop,
+          left: cardBackgroundLeft,
+          width: cardBackgroundWidth,
+          height: cardBackgroundHeight
+        } = destinationDeckRef.current.getBoundingClientRect();
+        const updatedCardBackgroundProperties = {
+          top: cardBackgroundTop + 4,
+          left: cardBackgroundLeft + cardBackgroundWidth / 4,
+          width: cardBackgroundWidth / 2,
+          height: cardBackgroundHeight - 8
+        };
+        setState(previousState => ({
+          ...previousState,
+          cardBackgroundProperties: updatedCardBackgroundProperties
+        }));
 
-      const updatedImageProperties = {
-        top: updatedCardBackgroundProperties.top + 4,
-        left: updatedCardBackgroundProperties.left + 4,
-        width: updatedCardBackgroundProperties.width - 10,
-        height: updatedCardBackgroundProperties.height / 2
-      };
-      setState(previousState => ({
-        ...previousState,
-        imageProperties: updatedImageProperties
-      }));
-    }
-  };
+        const updatedImageProperties = {
+          top: updatedCardBackgroundProperties.top + 4,
+          left: updatedCardBackgroundProperties.left + 4,
+          width: updatedCardBackgroundProperties.width - 10,
+          height: updatedCardBackgroundProperties.height / 2
+        };
+        setState(previousState => ({
+          ...previousState,
+          imageProperties: updatedImageProperties
+        }));
+      }
+    };
 
-  return (
-    <>
-      <div className="top-bar-container">
-        <div className="top-bar">
-          <div>
-            <DeckAll className="all" />
-          </div>
-          <div ref={failDeckRef}>
-            <DeckWrong
-              className="fail"
-              data-state={cardState === "fail" ? "consuming" : undefined}
-            />
-          </div>
-          <div ref={successDeckRef}>
-            <DeckCheckmark
-              className="success"
-              data-state={cardState === "success" ? "consuming" : undefined}
-            />
+    return (
+      <>
+        <div className="top-bar-container">
+          <div className="top-bar">
+            <div>
+              <DeckAll className="all" />
+            </div>
+            <div ref={failDeckRef}>
+              <DeckWrong
+                className="fail"
+                data-state={cardState === "fail" ? "consuming" : undefined}
+              />
+            </div>
+            <div ref={successDeckRef}>
+              <DeckCheckmark
+                className="success"
+                data-state={cardState === "success" ? "consuming" : undefined}
+              />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="main-section">
-        <div className="card" data-state={cardState}>
-          <UseLayout cardState={cardState}>
-            <div
-              className="card-background"
-              ref={cardBackgroundRef}
-              data-state={cardState}
+        <div className="main-section">
+          <div className="card" data-state={cardState}>
+            <UseLayout cardState={cardState}>
+              <div
+                className="card-background"
+                ref={cardBackgroundRef}
+                data-state={cardState}
+                style={
+                  ["success", "fail"].includes(cardState)
+                    ? cardBackgroundProperties
+                    : {}
+                }
+              />
+            </UseLayout>
+
+            <img
+              src={imageUrl}
+              alt="dog"
+              className="img"
+              ref={imageRef}
               style={
-                ["success", "fail"].includes(cardState)
-                  ? cardBackgroundProperties
-                  : {}
+                ["success", "fail"].includes(cardState) ? imageProperties : {}
+              }
+              data-state={
+                cardState === "success" || cardState === "fail"
+                  ? "moving"
+                  : undefined
               }
             />
-          </UseLayout>
-
-          <img
-            src={imageUrl}
-            alt="dog"
-            className="img"
-            ref={imageRef}
-            style={
-              ["success", "fail"].includes(cardState) ? imageProperties : {}
-            }
-            data-state={
-              cardState === "success" || cardState === "fail"
-                ? "moving"
-                : undefined
-            }
-          />
-          <h2
-            className="question"
-            data-state={
-              (cardState === "success") | (cardState === "fail")
-                ? "gone"
-                : undefined
-            }
-          >
-            Which dog breed is it?
-          </h2>
-          <ol
-            className="choices"
-            data-state={
-              ["success", "fail"].includes(cardState) ? "moving" : "initial"
-            }
-          >
-            {choices.map((choice, index) => (
-              <li
-                onClick={() => {
-                  if (cardState === "initial") {
-                    const isChoiceCorrect = onChoose(choice);
-                    const updatedCardState = transition(
-                      cardState,
-                      "CLICKED_CHOICE"
-                    );
-                    setState(previousState => ({
-                      ...previousState,
-                      cardState: updatedCardState,
-                      chosenChoice: choice,
-                      isChoiceCorrect: isChoiceCorrect
-                    }));
-                  }
-                  // moveSquare(choice)
-                }}
-                key={choice}
-                className="choice-li"
-                data-state={
-                  cardState === "initial"
-                    ? "initial"
-                    : cardState === "chosen" && chosenChoice === choice
-                    ? "chosen"
-                    : undefined
-                }
-              >
-                <div
-                  className="choice-alphabet"
+            <h2
+              className="question"
+              data-state={
+                (cardState === "success") | (cardState === "fail")
+                  ? "gone"
+                  : undefined
+              }
+            >
+              Which dog breed is it?
+            </h2>
+            <ol
+              className="choices"
+              data-state={
+                ["success", "fail"].includes(cardState) ? "moving" : "initial"
+              }
+            >
+              {choices.map((choice, index) => (
+                <li
+                  onClick={() => {
+                    if (cardState === "initial") {
+                      const isChoiceCorrect = onChoose(choice);
+                      const updatedCardState = transition(
+                        cardState,
+                        "CLICKED_CHOICE"
+                      );
+                      setState(previousState => ({
+                        ...previousState,
+                        cardState: updatedCardState,
+                        chosenChoice: choice,
+                        isChoiceCorrect: isChoiceCorrect
+                      }));
+                    }
+                    // moveSquare(choice)
+                  }}
+                  key={choice}
+                  className="choice-li"
                   data-state={
                     cardState === "initial"
                       ? "initial"
                       : cardState === "chosen" && chosenChoice === choice
                       ? "chosen"
-                      : "not-chosen"
+                      : undefined
                   }
                 >
-                  {`${indexToAlphabet[index]}:`}
-                </div>
-                <span className="choice-text">{choice}</span>
-              </li>
-            ))}
-          </ol>
+                  <div
+                    className="choice-alphabet"
+                    data-state={
+                      cardState === "initial"
+                        ? "initial"
+                        : cardState === "chosen" && chosenChoice === choice
+                        ? "chosen"
+                        : "not-chosen"
+                    }
+                  >
+                    {`${indexToAlphabet[index]}:`}
+                  </div>
+                  <span className="choice-text">{choice}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <ProgressBarContainer />
         </div>
-        <Timer timer={timer} duration={TIMER_DURATION_MS} />
-      </div>
-    </>
+      </>
+    );
+  }
+);
+
+const TIMER_DURATION_MS = 5000;
+
+const PageContainer = props => {
+  const [timer, cancelTimer] = useTimer({
+    onTimeout: () => console.log("timed out"),
+    duration: TIMER_DURATION_MS
+  });
+
+  return (
+    <TimerContext.Provider
+      value={{ timer: timer, duration: TIMER_DURATION_MS }}
+    >
+      <Page {...props} cancelTimer={cancelTimer} />
+    </TimerContext.Provider>
   );
 };
 
@@ -403,7 +425,7 @@ const App = () => {
         />
       ) : (
         <>
-          <Page
+          <PageContainer
             key={currentDogID}
             imageUrl={dogs[currentDogID].image.src}
             choices={dogs[currentDogID].choices}

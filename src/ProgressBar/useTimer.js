@@ -4,6 +4,9 @@ const useTimer = ({ onTimeout, duration }) => {
   const [timer, setTimer] = React.useState(duration);
 
   const intervalRef = React.useRef();
+  const cancelTimerRef = React.useRef(() => {
+    clearInterval(intervalRef.current);
+  });
 
   const createInterval = () => {
     const interval = setInterval(() => {
@@ -24,11 +27,7 @@ const useTimer = ({ onTimeout, duration }) => {
     intervalRef.current = createInterval();
   }, []);
 
-  const cancelTimer = () => {
-    clearInterval(intervalRef.current);
-  };
-
-  return [timer, cancelTimer];
+  return [timer, cancelTimerRef.current];
 };
 
 export default useTimer;
