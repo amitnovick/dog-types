@@ -25,6 +25,8 @@ const useTimer = ({ onTimeout, duration }) => {
 
   React.useEffect(() => {
     intervalRef.current = createInterval();
+
+    return () => clearInterval(intervalRef.current);
   }, []);
 
   return [timer, cancelTimerRef.current];

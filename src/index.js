@@ -49,7 +49,7 @@ const machine = {
   initial: "initial",
   states: {
     initial: {
-      on: { CLICKED_CHOICE: "chosen" }
+      on: { CLICKED_CHOICE: "chosen", CHOICE_WINDOW_TIMEOUT: "revealingAnswer" }
     },
     chosen: {
       on: { CHOICE_DISPLAY_TIMEOUT: "revealingAnswer" }
@@ -66,7 +66,7 @@ const transition = (state, event) => {
 };
 
 const Page = React.memo(
-  ({ imageUrl, choices, onFinish, onChoose, cancelTimer }) => {
+  ({ imageUrl, choices, onFinish, onChoose, cancelTimer, hasTimedOut }) => {
     const successDeckRef = React.useRef();
     const failDeckRef = React.useRef();
     const cardBackgroundRef = React.useRef();
@@ -87,12 +87,6 @@ const Page = React.memo(
       cardBackgroundProperties: {},
       imageProperties: {}
     });
-
-    React.useEffect(() => {
-      setTimeout(() => {
-        cancelTimer();
-      }, 2000);
-    }, []);
 
     console.log("cardState:", cardState);
 
@@ -226,6 +220,16 @@ const Page = React.memo(
       }
     };
 
+    React.useEffect(() => {
+      if (hasTimedOut && cardState === "initial") {
+        const nextCardState = transition(cardState, "CHOICE_WINDOW_TIMEOUT");
+        setState(previousState => ({
+          ...previousState,
+          cardState: nextCardState
+        }));
+      }
+    }, [hasTimedOut]);
+
     return (
       <>
         <div className="top-bar-container">
@@ -248,6 +252,7 @@ const Page = React.memo(
           </div>
         </div>
         <div className="main-section">
+          <ProgressBarContainer />
           <div className="card" data-state={cardState}>
             <UseLayout cardState={cardState}>
               <div
@@ -301,6 +306,7 @@ const Page = React.memo(
                         cardState,
                         "CLICKED_CHOICE"
                       );
+                      cancelTimer();
                       setState(previousState => ({
                         ...previousState,
                         cardState: updatedCardState,
@@ -337,7 +343,6 @@ const Page = React.memo(
               ))}
             </ol>
           </div>
-          <ProgressBarContainer />
         </div>
       </>
     );
@@ -347,8 +352,9 @@ const Page = React.memo(
 const TIMER_DURATION_MS = 5000;
 
 const PageContainer = props => {
+  const [hasTimedOut, setHasTimedOut] = React.useState(false);
   const [timer, cancelTimer] = useTimer({
-    onTimeout: () => console.log("timed out"),
+    onTimeout: () => setHasTimedOut(true),
     duration: TIMER_DURATION_MS
   });
 
@@ -356,7 +362,7 @@ const PageContainer = props => {
     <TimerContext.Provider
       value={{ timer: timer, duration: TIMER_DURATION_MS }}
     >
-      <Page {...props} cancelTimer={cancelTimer} />
+      <Page {...props} cancelTimer={cancelTimer} hasTimedOut={hasTimedOut} />
     </TimerContext.Provider>
   );
 };
