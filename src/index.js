@@ -46,8 +46,11 @@ const indexToAlphabet = {
 };
 
 const machine = {
-  initial: "initial",
+  initial: "entering",
   states: {
+    entering: {
+      on: { FINISHED_ENTRANCE_ANIMATION: "initial" }
+    },
     initial: {
       on: { CLICKED_CHOICE: "chosen", CHOICE_WINDOW_TIMEOUT: "revealingAnswer" }
     },
@@ -66,9 +69,18 @@ const transition = (state, event) => {
 };
 
 const Page = React.memo(
-  ({ imageUrl, choices, onFinish, onChoose, cancelTimer, hasTimedOut }) => {
+  ({
+    imageUrl,
+    choices,
+    onFinish,
+    onChoose,
+    startTimer,
+    cancelTimer,
+    hasTimedOut
+  }) => {
     const successDeckRef = React.useRef();
     const failDeckRef = React.useRef();
+    const cardRef = React.useRef();
     const cardBackgroundRef = React.useRef();
     const imageRef = React.useRef();
     const [
@@ -87,8 +99,6 @@ const Page = React.memo(
       cardBackgroundProperties: {},
       imageProperties: {}
     });
-
-    console.log("cardState:", cardState);
 
     const UseLayout = useSnapshot({
       getSnapshot: (prevProps, prevState) => {
@@ -230,6 +240,46 @@ const Page = React.memo(
       }
     }, [hasTimedOut]);
 
+    React.useEffect(() => {
+      if (cardState === "entering") {
+        const animation = cardRef.current.animate(
+          [
+            {
+              transform: "translateX(-60px)",
+              opacity: 0
+            },
+            {
+              transform: "none",
+              opacity: 1
+            }
+          ],
+          {
+            duration: 1000,
+            easing: "ease-in-out",
+            fill: "both"
+          }
+        );
+
+        const nextCardState = transition(
+          cardState,
+          "FINISHED_ENTRANCE_ANIMATION"
+        );
+        animation.onfinish = () =>
+          setState(previousState => ({
+            ...previousState,
+            cardState: nextCardState
+          }));
+      }
+    }, [cardState === "entering"]);
+
+    React.useEffect(() => {
+      if (cardState === "initial") {
+        startTimer();
+      }
+    }, [cardState === "initial"]);
+
+    console.log("cardState:", cardState);
+
     return (
       <>
         <div className="top-bar-container">
@@ -252,8 +302,13 @@ const Page = React.memo(
           </div>
         </div>
         <div className="main-section">
-          <ProgressBarContainer />
-          <div className="card" data-state={cardState}>
+          <div
+            className="progress-bar-wrapper"
+            data-hidden={cardState === "entering" ? "" : undefined}
+          >
+            <ProgressBarContainer />
+          </div>
+          <div className="card" ref={cardRef} data-state={cardState}>
             <UseLayout cardState={cardState}>
               <div
                 className="card-background"
@@ -353,7 +408,7 @@ const TIMER_DURATION_MS = 5000;
 
 const PageContainer = props => {
   const [hasTimedOut, setHasTimedOut] = React.useState(false);
-  const [timer, cancelTimer] = useTimer({
+  const { timer, startTimer, cancelTimer } = useTimer({
     onTimeout: () => setHasTimedOut(true),
     duration: TIMER_DURATION_MS
   });
@@ -362,7 +417,12 @@ const PageContainer = props => {
     <TimerContext.Provider
       value={{ timer: timer, duration: TIMER_DURATION_MS }}
     >
-      <Page {...props} cancelTimer={cancelTimer} hasTimedOut={hasTimedOut} />
+      <Page
+        {...props}
+        startTimer={startTimer}
+        cancelTimer={cancelTimer}
+        hasTimedOut={hasTimedOut}
+      />
     </TimerContext.Provider>
   );
 };
