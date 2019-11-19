@@ -22,8 +22,5 @@ $red-color: #ff6c5c;
 .progress-bar > div {
   border-radius: 20px;
   background-color: $red-color;
-}
-
-.progress-bar[data-state="ending"] > div {
-  transition: none;
+  transition: transform calc(var(--percentage) / 100 * 0.4s) linear;
 }

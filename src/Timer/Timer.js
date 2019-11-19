@@ -37,7 +37,7 @@ const Timer = () => {
         className="progress-bar"
         variant="determinate"
         color="secondary"
-        data-state={percentage < 10 ? "ending" : "in-progress"}
+        style={{ "--percentage": percentage }}
         value={percentage}
       />
     </div>
