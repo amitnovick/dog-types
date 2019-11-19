@@ -9,6 +9,9 @@ import { StylesProvider } from "@material-ui/core/styles";
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
 import Timer from "./Timer/Timer";
+import useTimer from "./Timer/useTimer";
+
+const TIMER_DURATION_MS = 5000;
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -83,6 +86,10 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
     chosenChoice: null,
     cardBackgroundProperties: {},
     imageProperties: {}
+  });
+  const [timer, cancelTimer] = useTimer({
+    onTimeout: () => console.log("timed out"),
+    duration: TIMER_DURATION_MS
   });
 
   console.log("cardState:", cardState);
@@ -326,7 +333,7 @@ const Page = ({ imageUrl, choices, onFinish, onChoose }) => {
             ))}
           </ol>
         </div>
-        <Timer />
+        <Timer timer={timer} duration={TIMER_DURATION_MS} />
       </div>
     </>
   );
