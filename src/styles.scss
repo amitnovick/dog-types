@@ -32,38 +32,6 @@ body {
   justify-content: space-between;
 }
 
-%deck {
-  height: 6rem;
-  max-height: 100%;
-  min-height: 2rem;
-  width: 6rem;
-  max-width: 100%;
-  min-width: 2rem;
-}
-
-.all {
-  @extend %deck;
-  color: grey;
-}
-
-.success {
-  @extend %deck;
-  color: green;
-  &[data-state="consuming"] {
-    transform: scale(1.2);
-    opacity: 0.5;
-  }
-}
-
-.fail {
-  @extend %deck;
-  color: red;
-  &[data-state="consuming"] {
-    transform: scale(1.2);
-    opacity: 0.5;
-  }
-}
-
 .card {
   display: flex;
   flex-direction: column;
@@ -73,33 +41,13 @@ body {
   padding: 1.5rem;
   opacity: 0;
 
-  position: relative;
-
-  &[data-state="moving"] {
-    /* TODO: use this! */
-    position: static;
-  }
-}
-
-.card-background {
-  /* The commented out properties should solve issues */
-  /* 
-  1. Parent card has `padding` that influences this background element's top position
-  2. Stretching to parent card's width/height messes with the border during animation
-  */
-  position: absolute;
   border-radius: 12px;
   border-color: black;
   border-style: solid;
   border-width: 3px;
   background-color: white;
 
-  z-index: -1;
-
-  /* The followingvalues will be overridden by inline style when the card moves toward a deck*/
-  top: 0;
-  width: 100%;
-  height: 100%;
+  position: relative;
 }
 
 .main-section {
@@ -116,19 +64,12 @@ body {
   height: 18rem;
 
   width: 100%;
-
-  &[data-state="moving"] {
-    position: absolute;
-  }
 }
 
 /* **************** */
 .question {
   margin: 0.5rem 0 0 0;
   visibility: visible;
-  &[data-state="gone"] {
-    visibility: hidden;
-  }
 }
 
 .choices {
@@ -136,10 +77,6 @@ body {
   padding-inline-start: 0px;
   list-style: none;
   display: block;
-
-  &[data-state="moving"] {
-    opacity: 0;
-  }
 }
 
 .choice-li {
@@ -226,6 +163,15 @@ body {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .next-button {
   cursor: pointer;
   height: 2rem;
@@ -242,4 +188,6 @@ body {
   position: absolute;
   bottom: 0.5rem;
   right: 0.5rem;
+
+  animation: fadeIn 1s;
 }

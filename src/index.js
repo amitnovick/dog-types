@@ -1,14 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { CircularProgress } from "@material-ui/core";
-import { ReactComponent as DeckCheckmark } from "./deck-checkmark.svg";
-import { ReactComponent as DeckWrong } from "./deck-wrong.svg";
-import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { StylesProvider } from "@material-ui/core/styles";
 import { useMachine } from "@xstate/react";
 
 import "./styles.scss";
-import useSnapshot from "./useSnapshot";
 import useTimer from "./ProgressBar/useTimer";
 import TimerContext from "./ProgressBar/TimerContext";
 import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
@@ -25,21 +21,6 @@ function preloadImage(url) {
     img.onload = () => resolve(img);
   });
 }
-
-const getProperties = element => {
-  const { top, left, width, height } = element.getBoundingClientRect();
-  const properties = { top, left, width, height };
-  return properties;
-};
-
-const getDeltas = ({ first, last }) => {
-  const deltaX = first.left - last.left;
-  const deltaY = first.top - last.top;
-  const deltaW = first.width / last.width;
-  const deltaH = first.height / last.height;
-
-  return { deltaX, deltaY, deltaW, deltaH };
-};
 
 const indexToAlphabet = {
   0: "A",
@@ -58,43 +39,9 @@ const Page = React.memo(
     cancelTimer,
     hasTimedOut
   }) => {
-    const successDeckRef = React.useRef();
-    const failDeckRef = React.useRef();
     const cardRef = React.useRef();
-    const cardBackgroundRef = React.useRef();
     const imageRef = React.useRef();
     const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
-
-    const moveSquare = () => {
-      const destinationDeckRef = isChoiceCorrect ? successDeckRef : failDeckRef;
-      const {
-        top: cardBackgroundTop,
-        left: cardBackgroundLeft,
-        width: cardBackgroundWidth,
-        height: cardBackgroundHeight
-      } = destinationDeckRef.current.getBoundingClientRect();
-      const updatedCardBackgroundProperties = {
-        top: cardBackgroundTop + 4,
-        left: cardBackgroundLeft + cardBackgroundWidth / 4,
-        width: cardBackgroundWidth / 2,
-        height: cardBackgroundHeight - 8
-      };
-      setState(previousState => ({
-        ...previousState,
-        cardBackgroundProperties: updatedCardBackgroundProperties
-      }));
-
-      const updatedImageProperties = {
-        top: updatedCardBackgroundProperties.top + 4,
-        left: updatedCardBackgroundProperties.left + 4,
-        width: updatedCardBackgroundProperties.width - 10,
-        height: updatedCardBackgroundProperties.height / 2
-      };
-      setState(previousState => ({
-        ...previousState,
-        imageProperties: updatedImageProperties
-      }));
-    };
 
     const [{ value: cardState }, send] = useMachine(machine, {
       devTools: true,
@@ -121,6 +68,27 @@ const Page = React.memo(
 
           animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
         },
+        animateCardSlideAndFadeOut: () => {
+          const animation = cardRef.current.animate(
+            [
+              {
+                transform: "none",
+                opacity: 1
+              },
+              {
+                transform: "translateX(60px)",
+                opacity: 0
+              }
+            ],
+            {
+              duration: 1000,
+              easing: "ease-in-out",
+              fill: "both"
+            }
+          );
+
+          animation.onfinish = onFinish;
+        },
         animateAnswerListItem: () => {
           const answerChoiceIndex = choices.findIndex(
             choice => choice === answerChoice
@@ -142,114 +110,20 @@ const Page = React.memo(
             }
           );
         },
-        moveSquare: moveSquare,
+        updateChoice: (_, { choice }) => {
+          const isChoiceCorrect = onChoose(choice);
+          cancelTimer();
+          setState(previousState => ({
+            ...previousState,
+            chosenChoice: choice,
+            isChoiceCorrect: isChoiceCorrect
+          }));
+        },
         onFinish: onFinish
       }
     });
-    const [
-      {
-        isChoiceCorrect,
-        chosenChoice,
-        cardBackgroundProperties,
-        imageProperties
-      },
-      setState
-    ] = React.useState({
-      isChoiceCorrect: null,
-      chosenChoice: null,
-      cardBackgroundProperties: {},
-      imageProperties: {}
-    });
-
-    const UseLayout = useSnapshot({
-      getSnapshot: (prevProps, prevState) => {
-        if (
-          cardState === "moving" &&
-          prevProps.cardState === "revealingAnswer"
-        ) {
-          // First
-          const firstCardBackground = getProperties(cardBackgroundRef.current);
-          const firstImage = getProperties(imageRef.current);
-          return { firstCardBackground, firstImage };
-        } else {
-          return { firstCardBackground: null, firstImage: null };
-        }
-      },
-      layoutEffect: ({ firstCardBackground, firstImage }) => {
-        if (!firstCardBackground || !firstImage) {
-          return;
-        } else {
-          // Last
-          const lastCardBackground = cardBackgroundProperties;
-
-          const lastImage = imageProperties;
-
-          // Inverse
-          const deltasCardBackground = getDeltas({
-            first: firstCardBackground,
-            last: lastCardBackground
-          });
-
-          const deltasImage = getDeltas({ first: firstImage, last: lastImage });
-
-          // Play
-          const cardBackgroundAnimation = cardBackgroundRef.current.animate(
-            [
-              {
-                transformOrigin: "top left",
-                transform: `
-            translate(${deltasCardBackground.deltaX}px, ${
-                  deltasCardBackground.deltaY
-                }px)
-            
-          `,
-                opacity: 1,
-                width: `${firstCardBackground.width}px`,
-                height: `${firstCardBackground.height}px`
-              },
-              {
-                transformOrigin: "top left",
-                transform: "none",
-                opacity: 0,
-                width: `${lastCardBackground.width}px`,
-                height: `${lastCardBackground.height}px`
-              }
-            ],
-            {
-              duration: 600,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
-
-          imageRef.current.animate(
-            [
-              {
-                transformOrigin: "top left",
-                transform: `
-            translate(${deltasImage.deltaX}px, ${deltasImage.deltaY}px)
-              scale(${deltasImage.deltaW}, ${deltasImage.deltaH})
-          `,
-                opacity: 1
-              },
-              {
-                transformOrigin: "top left",
-                transform: "none",
-                opacity: 0
-              }
-            ],
-            {
-              duration: 600,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
-
-          cardBackgroundAnimation.onfinish = () => {
-            onFinish();
-          };
-        }
-      }
+    const [{ chosenChoice }, setState] = React.useState({
+      chosenChoice: null
     });
 
     React.useEffect(() => {
@@ -263,36 +137,14 @@ const Page = React.memo(
     return (
       <>
         <div className="top-bar-container">
-          <div className="top-bar">
-            <div>
-              <DeckAll className="all" />
-            </div>
-            <div ref={failDeckRef}>
-              <DeckWrong
-                className="fail"
-                data-state={
-                  cardState === "moving" && !isChoiceCorrect
-                    ? "consuming"
-                    : undefined
-                }
-              />
-            </div>
-            <div ref={successDeckRef}>
-              <DeckCheckmark
-                className="success"
-                data-state={
-                  cardState === "moving" && isChoiceCorrect
-                    ? "consuming"
-                    : undefined
-                }
-              />
-            </div>
-          </div>
+          <div className="top-bar" />
         </div>
         <div className="main-section">
           <div
             className="progress-bar-wrapper"
-            data-hidden={cardState === "entering" ? "" : undefined}
+            data-hidden={
+              ["entering", "moving"].includes(cardState) ? "" : undefined
+            }
           >
             <ProgressBarContainer />
           </div>
@@ -304,30 +156,14 @@ const Page = React.memo(
             ) : (
               undefined
             )}
-
-            <UseLayout cardState={cardState}>
-              <div
-                className="card-background"
-                ref={cardBackgroundRef}
-                data-state={cardState}
-                style={cardState === "moving" ? cardBackgroundProperties : {}}
-              />
-            </UseLayout>
-
             <img
               src={imageUrl}
               alt="dog"
               className="img"
               ref={imageRef}
-              style={cardState === "moving" ? imageProperties : {}}
               data-state={cardState === "moving" ? "moving" : undefined}
             />
-            <h2
-              className="question"
-              data-state={cardState === "moving" ? "gone" : undefined}
-            >
-              Which dog breed is it?
-            </h2>
+            <h2 className="question">Which dog breed is it?</h2>
             <ol
               className="choices"
               data-state={cardState === "moving" ? "moving" : "idle"}
@@ -335,16 +171,7 @@ const Page = React.memo(
               {choices.map((choice, index) => (
                 <li
                   onClick={() => {
-                    if (cardState === "idle") {
-                      const isChoiceCorrect = onChoose(choice);
-                      cancelTimer();
-                      setState(previousState => ({
-                        ...previousState,
-                        chosenChoice: choice,
-                        isChoiceCorrect: isChoiceCorrect
-                      }));
-                      send("CLICKED_CHOICE");
-                    }
+                    send("CLICKED_CHOICE", { choice });
                   }}
                   key={choice}
                   ref={choiceRefs[index]}

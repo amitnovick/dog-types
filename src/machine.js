@@ -5,11 +5,17 @@ const machine = Machine({
   states: {
     entering: {
       entry: "animateCardSlideAndFadeIn",
-      on: { FINISHED_ENTRANCE_ANIMATION: "idle" }
+      on: {
+        FINISHED_ENTRANCE_ANIMATION: "idle",
+        CLICKED_CHOICE: { target: "chosen", actions: "updateChoice" }
+      }
     },
     idle: {
       entry: "startTimer",
-      on: { CLICKED_CHOICE: "chosen", CHOICE_WINDOW_TIMEOUT: "revealingAnswer" }
+      on: {
+        CLICKED_CHOICE: { target: "chosen", actions: "updateChoice" },
+        CHOICE_WINDOW_TIMEOUT: "revealingAnswer"
+      }
     },
     chosen: {
       after: {
@@ -21,7 +27,7 @@ const machine = Machine({
       on: { NEXT: "moving" }
     },
     moving: {
-      entry: "moveSquare"
+      entry: "animateCardSlideAndFadeOut"
     }
   }
 });
