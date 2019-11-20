@@ -47,8 +47,6 @@ const indexToAlphabet = {
   2: "C"
 };
 
-const animateSlideAndFadeIn = element => {};
-
 const Page = React.memo(
   ({
     imageUrl,
@@ -65,7 +63,31 @@ const Page = React.memo(
     const cardBackgroundRef = React.useRef();
     const imageRef = React.useRef();
     const [{ value: cardState }, send] = useMachine(machine, {
-      devTools: true
+      devTools: true,
+      actions: {
+        startTimer: startTimer,
+        animateCardSlideAndFadeIn: () => {
+          const animation = cardRef.current.animate(
+            [
+              {
+                transform: "translateX(-60px)",
+                opacity: 0
+              },
+              {
+                transform: "none",
+                opacity: 1
+              }
+            ],
+            {
+              duration: 1000,
+              easing: "ease-in-out",
+              fill: "both"
+            }
+          );
+
+          animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
+        }
+      }
     });
     const [
       {
@@ -209,40 +231,10 @@ const Page = React.memo(
     };
 
     React.useEffect(() => {
-      if (hasTimedOut && cardState === "idle") {
+      if (hasTimedOut) {
         send("CHOICE_WINDOW_TIMEOUT");
       }
     }, [hasTimedOut]);
-
-    React.useEffect(() => {
-      if (cardState === "entering") {
-        const animation = cardRef.current.animate(
-          [
-            {
-              transform: "translateX(-60px)",
-              opacity: 0
-            },
-            {
-              transform: "none",
-              opacity: 1
-            }
-          ],
-          {
-            duration: 1000,
-            easing: "ease-in-out",
-            fill: "both"
-          }
-        );
-
-        animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
-      }
-    }, [cardState === "entering"]);
-
-    React.useEffect(() => {
-      if (cardState === "idle") {
-        startTimer();
-      }
-    }, [cardState === "idle"]);
 
     console.log("cardState:", cardState);
 
