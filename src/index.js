@@ -52,6 +52,7 @@ const Page = React.memo(
     imageUrl,
     choices,
     onFinish,
+    answerChoice,
     onChoose,
     startTimer,
     cancelTimer,
@@ -62,6 +63,39 @@ const Page = React.memo(
     const cardRef = React.useRef();
     const cardBackgroundRef = React.useRef();
     const imageRef = React.useRef();
+    const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
+
+    const moveSquare = () => {
+      const destinationDeckRef = isChoiceCorrect ? successDeckRef : failDeckRef;
+      const {
+        top: cardBackgroundTop,
+        left: cardBackgroundLeft,
+        width: cardBackgroundWidth,
+        height: cardBackgroundHeight
+      } = destinationDeckRef.current.getBoundingClientRect();
+      const updatedCardBackgroundProperties = {
+        top: cardBackgroundTop + 4,
+        left: cardBackgroundLeft + cardBackgroundWidth / 4,
+        width: cardBackgroundWidth / 2,
+        height: cardBackgroundHeight - 8
+      };
+      setState(previousState => ({
+        ...previousState,
+        cardBackgroundProperties: updatedCardBackgroundProperties
+      }));
+
+      const updatedImageProperties = {
+        top: updatedCardBackgroundProperties.top + 4,
+        left: updatedCardBackgroundProperties.left + 4,
+        width: updatedCardBackgroundProperties.width - 10,
+        height: updatedCardBackgroundProperties.height / 2
+      };
+      setState(previousState => ({
+        ...previousState,
+        imageProperties: updatedImageProperties
+      }));
+    };
+
     const [{ value: cardState }, send] = useMachine(machine, {
       devTools: true,
       actions: {
@@ -86,7 +120,30 @@ const Page = React.memo(
           );
 
           animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
-        }
+        },
+        animateAnswerListItem: () => {
+          const answerChoiceIndex = choices.findIndex(
+            choice => choice === answerChoice
+          );
+          const answerChoiceRef = choiceRefs[answerChoiceIndex];
+          answerChoiceRef.current.animate(
+            [
+              {
+                opacity: 0.2
+              },
+              {
+                opacity: 1
+              }
+            ],
+            {
+              duration: 500,
+              easing: "ease-in-out",
+              fill: "both"
+            }
+          );
+        },
+        moveSquare: moveSquare,
+        onFinish: onFinish
       }
     });
     const [
@@ -107,8 +164,8 @@ const Page = React.memo(
     const UseLayout = useSnapshot({
       getSnapshot: (prevProps, prevState) => {
         if (
-          (cardState === "fail" || cardState === "success") &&
-          prevProps.cardState === "idle"
+          cardState === "moving" &&
+          prevProps.cardState === "revealingAnswer"
         ) {
           // First
           const firstCardBackground = getProperties(cardBackgroundRef.current);
@@ -194,41 +251,6 @@ const Page = React.memo(
         }
       }
     });
-    const moveSquare = () => {
-      if (cardState === "revealingAnswer") {
-        send("ANSWER_REVEAL_TIMEOUT");
-        const destinationDeckRef = isChoiceCorrect
-          ? successDeckRef
-          : failDeckRef;
-        const {
-          top: cardBackgroundTop,
-          left: cardBackgroundLeft,
-          width: cardBackgroundWidth,
-          height: cardBackgroundHeight
-        } = destinationDeckRef.current.getBoundingClientRect();
-        const updatedCardBackgroundProperties = {
-          top: cardBackgroundTop + 4,
-          left: cardBackgroundLeft + cardBackgroundWidth / 4,
-          width: cardBackgroundWidth / 2,
-          height: cardBackgroundHeight - 8
-        };
-        setState(previousState => ({
-          ...previousState,
-          cardBackgroundProperties: updatedCardBackgroundProperties
-        }));
-
-        const updatedImageProperties = {
-          top: updatedCardBackgroundProperties.top + 4,
-          left: updatedCardBackgroundProperties.left + 4,
-          width: updatedCardBackgroundProperties.width - 10,
-          height: updatedCardBackgroundProperties.height / 2
-        };
-        setState(previousState => ({
-          ...previousState,
-          imageProperties: updatedImageProperties
-        }));
-      }
-    };
 
     React.useEffect(() => {
       if (hasTimedOut) {
@@ -248,13 +270,21 @@ const Page = React.memo(
             <div ref={failDeckRef}>
               <DeckWrong
                 className="fail"
-                data-state={cardState === "fail" ? "consuming" : undefined}
+                data-state={
+                  cardState === "moving" && !isChoiceCorrect
+                    ? "consuming"
+                    : undefined
+                }
               />
             </div>
             <div ref={successDeckRef}>
               <DeckCheckmark
                 className="success"
-                data-state={cardState === "success" ? "consuming" : undefined}
+                data-state={
+                  cardState === "moving" && isChoiceCorrect
+                    ? "consuming"
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -267,16 +297,20 @@ const Page = React.memo(
             <ProgressBarContainer />
           </div>
           <div className="card" ref={cardRef} data-state={cardState}>
+            {cardState === "revealingAnswer" ? (
+              <button className="next-button" onClick={() => send("NEXT")}>
+                →
+              </button>
+            ) : (
+              undefined
+            )}
+
             <UseLayout cardState={cardState}>
               <div
                 className="card-background"
                 ref={cardBackgroundRef}
                 data-state={cardState}
-                style={
-                  ["success", "fail"].includes(cardState)
-                    ? cardBackgroundProperties
-                    : {}
-                }
+                style={cardState === "moving" ? cardBackgroundProperties : {}}
               />
             </UseLayout>
 
@@ -285,30 +319,18 @@ const Page = React.memo(
               alt="dog"
               className="img"
               ref={imageRef}
-              style={
-                ["success", "fail"].includes(cardState) ? imageProperties : {}
-              }
-              data-state={
-                cardState === "success" || cardState === "fail"
-                  ? "moving"
-                  : undefined
-              }
+              style={cardState === "moving" ? imageProperties : {}}
+              data-state={cardState === "moving" ? "moving" : undefined}
             />
             <h2
               className="question"
-              data-state={
-                (cardState === "success") | (cardState === "fail")
-                  ? "gone"
-                  : undefined
-              }
+              data-state={cardState === "moving" ? "gone" : undefined}
             >
               Which dog breed is it?
             </h2>
             <ol
               className="choices"
-              data-state={
-                ["success", "fail"].includes(cardState) ? "moving" : "idle"
-              }
+              data-state={cardState === "moving" ? "moving" : "idle"}
             >
               {choices.map((choice, index) => (
                 <li
@@ -323,31 +345,50 @@ const Page = React.memo(
                       }));
                       send("CLICKED_CHOICE");
                     }
-                    // moveSquare(choice)
                   }}
                   key={choice}
+                  ref={choiceRefs[index]}
                   className="choice-li"
-                  data-state={
-                    cardState === "idle"
-                      ? "initial"
-                      : cardState === "chosen" && chosenChoice === choice
-                      ? "chosen"
+                  data-bg-color={
+                    ["revealingAnswer", "moving"].includes(cardState) &&
+                    choice === answerChoice
+                      ? "green"
+                      : ["chosen", "revealingAnswer", "moving"].includes(
+                          cardState
+                        ) && choice === chosenChoice
+                      ? "primary"
+                      : ["entering", "idle"].includes(cardState)
+                      ? "hoverable"
                       : undefined
                   }
                 >
                   <div
                     className="choice-alphabet"
-                    data-state={
-                      cardState === "idle"
-                        ? "initial"
-                        : cardState === "chosen" && chosenChoice === choice
-                        ? "chosen"
-                        : "not-chosen"
+                    data-color={
+                      /* Watch out, order matters here */
+                      ["revealingAnswer", "moving"].includes(cardState) &&
+                      choice === answerChoice
+                        ? "black"
+                        : ["chosen", "revealingAnswer", "moving"].includes(
+                            cardState
+                          ) && choice === chosenChoice
+                        ? "white"
+                        : undefined
                     }
                   >
                     {`${indexToAlphabet[index]}:`}
                   </div>
-                  <span className="choice-text">{choice}</span>
+                  <span
+                    className="choice-text"
+                    data-color={
+                      ["revealingAnswer", "moving"].includes(cardState) &&
+                      choice === answerChoice
+                        ? "white"
+                        : undefined
+                    }
+                  >
+                    {choice}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -449,6 +490,7 @@ const App = () => {
             key={currentDogID}
             imageUrl={dogs[currentDogID].image.src}
             choices={dogs[currentDogID].choices}
+            answerChoice={dogs[currentDogID].breed}
             onChoose={chosenBreed => {
               const outcome = chosenBreed === dogs[currentDogID].breed;
               setState(previousState => ({

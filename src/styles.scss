@@ -147,7 +147,6 @@ body {
   align-items: center;
   border: 2px solid $color;
   border-radius: 8px;
-  background-color: white;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
 
   margin-bottom: 0.5rem;
@@ -155,12 +154,17 @@ body {
     margin-bottom: 0;
   }
 
-  &[data-state="initial"]:hover {
-    background-color: rgba($color, 0.3);
+  &[data-bg-color="green"] {
+    background-color: #41904e;
+    border-color: #41904e;
   }
 
-  &[data-state="chosen"] {
+  &[data-bg-color="primary"] {
     background-color: $color;
+  }
+
+  &[data-state="hoverable"]:hover {
+    background-color: rgba($color, 0.3);
   }
 }
 
@@ -174,6 +178,12 @@ body {
 
   font-size: $choice-font-size;
   font-weight: 700;
+
+  color: black;
+
+  &[data-color="white"] {
+    color: white;
+  }
 }
 
 .choice-alphabet {
@@ -192,13 +202,14 @@ body {
   text-align: center;
   display: flex;
 
-  &[data-state="initial"],
-  &[data-state="not-chosen"] {
-    color: $color;
+  color: $color;
+
+  &[data-color="white"] {
+    color: white;
   }
 
-  &[data-state="chosen"] {
-    color: white;
+  &[data-color="black"] {
+    color: black;
   }
 }
 
@@ -213,4 +224,22 @@ body {
   &[data-hidden] {
     visibility: hidden;
   }
+}
+
+.next-button {
+  cursor: pointer;
+  height: 2rem;
+  padding: 0 0 0 0;
+  font-size: 1.5rem;
+  outline: none;
+  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: rebeccapurple;
+  color: white;
+
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
 }

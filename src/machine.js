@@ -12,12 +12,17 @@ const machine = Machine({
       on: { CLICKED_CHOICE: "chosen", CHOICE_WINDOW_TIMEOUT: "revealingAnswer" }
     },
     chosen: {
-      on: { CHOICE_DISPLAY_TIMEOUT: "revealingAnswer" }
+      after: {
+        500: "revealingAnswer"
+      }
     },
     revealingAnswer: {
-      on: { ANSWER_REVEAL_TIMEOUT: "moving" }
+      entry: "animateAnswerListItem",
+      on: { NEXT: "moving" }
     },
-    moving: {}
+    moving: {
+      entry: "moveSquare"
+    }
   }
 });
 
