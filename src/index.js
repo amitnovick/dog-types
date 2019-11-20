@@ -5,12 +5,14 @@ import { ReactComponent as DeckCheckmark } from "./deck-checkmark.svg";
 import { ReactComponent as DeckWrong } from "./deck-wrong.svg";
 import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { StylesProvider } from "@material-ui/core/styles";
+import { useMachine } from "@xstate/react";
 
 import "./styles.scss";
 import useSnapshot from "./useSnapshot";
 import useTimer from "./ProgressBar/useTimer";
 import TimerContext from "./ProgressBar/TimerContext";
 import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
+import machine from "./machine";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -45,28 +47,7 @@ const indexToAlphabet = {
   2: "C"
 };
 
-const machine = {
-  initial: "entering",
-  states: {
-    entering: {
-      on: { FINISHED_ENTRANCE_ANIMATION: "initial" }
-    },
-    initial: {
-      on: { CLICKED_CHOICE: "chosen", CHOICE_WINDOW_TIMEOUT: "revealingAnswer" }
-    },
-    chosen: {
-      on: { CHOICE_DISPLAY_TIMEOUT: "revealingAnswer" }
-    },
-    revealingAnswer: {
-      on: { ANSWER_REVEAL_TIMEOUT: "moving" }
-    },
-    moving: {}
-  }
-};
-
-const transition = (state, event) => {
-  return machine.states[state].on[event] || state;
-};
+const animateSlideAndFadeIn = element => {};
 
 const Page = React.memo(
   ({
@@ -83,9 +64,11 @@ const Page = React.memo(
     const cardRef = React.useRef();
     const cardBackgroundRef = React.useRef();
     const imageRef = React.useRef();
+    const [{ value: cardState }, send] = useMachine(machine, {
+      devTools: true
+    });
     const [
       {
-        cardState,
         isChoiceCorrect,
         chosenChoice,
         cardBackgroundProperties,
@@ -93,7 +76,6 @@ const Page = React.memo(
       },
       setState
     ] = React.useState({
-      cardState: machine.initial,
       isChoiceCorrect: null,
       chosenChoice: null,
       cardBackgroundProperties: {},
@@ -104,7 +86,7 @@ const Page = React.memo(
       getSnapshot: (prevProps, prevState) => {
         if (
           (cardState === "fail" || cardState === "success") &&
-          prevProps.cardState === "initial"
+          prevProps.cardState === "idle"
         ) {
           // First
           const firstCardBackground = getProperties(cardBackgroundRef.current);
@@ -192,14 +174,10 @@ const Page = React.memo(
     });
     const moveSquare = () => {
       if (cardState === "revealingAnswer") {
-        const updatedCardState = transition(cardState, "ANSWER_REVEAL_TIMEOUT");
+        send("ANSWER_REVEAL_TIMEOUT");
         const destinationDeckRef = isChoiceCorrect
           ? successDeckRef
           : failDeckRef;
-        setState(previousState => ({
-          ...previousState,
-          cardState: updatedCardState
-        }));
         const {
           top: cardBackgroundTop,
           left: cardBackgroundLeft,
@@ -231,12 +209,8 @@ const Page = React.memo(
     };
 
     React.useEffect(() => {
-      if (hasTimedOut && cardState === "initial") {
-        const nextCardState = transition(cardState, "CHOICE_WINDOW_TIMEOUT");
-        setState(previousState => ({
-          ...previousState,
-          cardState: nextCardState
-        }));
+      if (hasTimedOut && cardState === "idle") {
+        send("CHOICE_WINDOW_TIMEOUT");
       }
     }, [hasTimedOut]);
 
@@ -260,23 +234,15 @@ const Page = React.memo(
           }
         );
 
-        const nextCardState = transition(
-          cardState,
-          "FINISHED_ENTRANCE_ANIMATION"
-        );
-        animation.onfinish = () =>
-          setState(previousState => ({
-            ...previousState,
-            cardState: nextCardState
-          }));
+        animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
       }
     }, [cardState === "entering"]);
 
     React.useEffect(() => {
-      if (cardState === "initial") {
+      if (cardState === "idle") {
         startTimer();
       }
-    }, [cardState === "initial"]);
+    }, [cardState === "idle"]);
 
     console.log("cardState:", cardState);
 
@@ -349,32 +315,28 @@ const Page = React.memo(
             <ol
               className="choices"
               data-state={
-                ["success", "fail"].includes(cardState) ? "moving" : "initial"
+                ["success", "fail"].includes(cardState) ? "moving" : "idle"
               }
             >
               {choices.map((choice, index) => (
                 <li
                   onClick={() => {
-                    if (cardState === "initial") {
+                    if (cardState === "idle") {
                       const isChoiceCorrect = onChoose(choice);
-                      const updatedCardState = transition(
-                        cardState,
-                        "CLICKED_CHOICE"
-                      );
                       cancelTimer();
                       setState(previousState => ({
                         ...previousState,
-                        cardState: updatedCardState,
                         chosenChoice: choice,
                         isChoiceCorrect: isChoiceCorrect
                       }));
+                      send("CLICKED_CHOICE");
                     }
                     // moveSquare(choice)
                   }}
                   key={choice}
                   className="choice-li"
                   data-state={
-                    cardState === "initial"
+                    cardState === "idle"
                       ? "initial"
                       : cardState === "chosen" && chosenChoice === choice
                       ? "chosen"
@@ -384,7 +346,7 @@ const Page = React.memo(
                   <div
                     className="choice-alphabet"
                     data-state={
-                      cardState === "initial"
+                      cardState === "idle"
                         ? "initial"
                         : cardState === "chosen" && chosenChoice === choice
                         ? "chosen"
