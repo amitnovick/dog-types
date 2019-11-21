@@ -13,23 +13,58 @@ body {
 }
 
 #root {
-  padding: 0.5rem;
   height: 100%;
   width: 100%;
 }
 
-.top-bar-container {
+.top-bar {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  background-color: #d9d9d9;
+  padding: 0.5rem;
 }
 
-.top-bar {
-  width: 100%;
-  max-width: 30rem;
+.top-bar-center-area {
+  background-color: white;
+  padding: 0.5rem 2rem 0.5rem 2rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+
+  & > *:not(:last-child) {
+    margin-right: 0.5rem;
+  }
+}
+
+.deck-button {
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background-color: transparent;
+  padding: 0.2rem;
+  display: flex;
+}
+
+%deck-svg {
+  height: 3rem;
+  width: 3rem;
+}
+
+.deck-success {
+  @extend %deck-svg;
+}
+
+.deck-all {
+  @extend %deck-svg;
+}
+
+.record-text {
+  display: block;
+
+  font-size: 2.5rem;
+  font-weight: 500;
 }
 
 .card {
@@ -57,6 +92,7 @@ body {
   display: flex;
   flex-direction: column;
   margin: 0 auto;
+  padding: 0.5rem;
 }
 
 .img {
@@ -182,7 +218,7 @@ body {
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background-color: rebeccapurple;
+  background-color: #0b6afb;
   color: white;
 
   position: absolute;

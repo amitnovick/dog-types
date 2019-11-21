@@ -9,6 +9,10 @@ import useTimer from "./ProgressBar/useTimer";
 import TimerContext from "./ProgressBar/TimerContext";
 import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
 import machine from "./machine";
+import { ReactComponent as DeckAll } from "./deck-all.svg";
+import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -136,8 +140,14 @@ const Page = React.memo(
 
     return (
       <>
-        <div className="top-bar-container">
-          <div className="top-bar" />
+        <div className="top-bar">
+          <div className="top-bar-center-area">
+            <DeckSuccess className="deck-success" />
+            <span className="record-text">7 of 15</span>
+            <button className="deck-button">
+              <DeckAll className="deck-all" />
+            </button>
+          </div>
         </div>
         <div className="main-section">
           <div
@@ -151,7 +161,7 @@ const Page = React.memo(
           <div className="card" ref={cardRef} data-state={cardState}>
             {cardState === "revealingAnswer" ? (
               <button className="next-button" onClick={() => send("NEXT")}>
-                →
+                <FontAwesomeIcon icon={faArrowRight} />
               </button>
             ) : (
               undefined
