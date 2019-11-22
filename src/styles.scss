@@ -1,5 +1,5 @@
 $body-bg-color: darken(white, 15%);
-$choice-font-size: 2rem;
+$choice-font-size: 1.5rem;
 $color: #c97f20;
 
 * {
@@ -136,13 +136,17 @@ body {
     background-color: $color;
   }
 
-  &[data-state="hoverable"]:hover {
+  &[data-state="hoverable"]:hover,
+  &[data-state="hoverable"]:active {
     background-color: rgba($color, 0.3);
   }
 }
 
 .choice-text {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
   display: block;
   user-select: none;
   background-color: transparent;
@@ -157,11 +161,16 @@ body {
   &[data-color="white"] {
     color: white;
   }
+
+  &:focus {
+    outline: none !important;
+  }
 }
 
 .choice-alphabet {
   cursor: pointer;
 
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
 
   width: 2.2rem;
