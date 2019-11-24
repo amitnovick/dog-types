@@ -5,16 +5,19 @@ $red-color: #ff6c5c;
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .numeric-timer {
-  margin-right: 0.5rem;
+  margin-right: 0.5vh;
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 3vh;
 }
 
 .progress-bar {
-  height: 10px;
+  border-radius: 20px;
+
+  height: 30%;
   background-color: lighten($red-color, 20%);
   flex-grow: 1;
 }

@@ -3,7 +3,9 @@ import ReactDOM from "react-dom";
 import { CircularProgress } from "@material-ui/core";
 import { StylesProvider } from "@material-ui/core/styles";
 import { useMachine } from "@xstate/react";
+import "normalize.css";
 
+import "./globalStyles.scss";
 import "./styles.scss";
 import useTimer from "./ProgressBar/useTimer";
 import TimerContext from "./ProgressBar/TimerContext";
@@ -139,7 +141,7 @@ const Page = React.memo(
     console.log("cardState:", cardState);
 
     return (
-      <>
+      <div className="screen">
         <div className="top-bar">
           <div className="top-bar-center-area">
             <DeckSuccess className="deck-success" />
@@ -158,7 +160,7 @@ const Page = React.memo(
           >
             <ProgressBarContainer />
           </div>
-          <div className="card" ref={cardRef} data-state={cardState}>
+          <div className="card" ref={cardRef} data-state={cardState} style={{}}>
             {cardState === "revealingAnswer" ? (
               <button className="next-button" onClick={() => send("NEXT")}>
                 <FontAwesomeIcon icon={faArrowRight} />
@@ -173,7 +175,7 @@ const Page = React.memo(
               ref={imageRef}
               data-state={cardState === "moving" ? "moving" : undefined}
             />
-            <h2 className="question">Which dog breed is it?</h2>
+            <h2 className="question">Which dog type is it?</h2>
             <ol
               className="choices"
               data-state={cardState === "moving" ? "moving" : "idle"}
@@ -231,7 +233,7 @@ const Page = React.memo(
             </ol>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 );

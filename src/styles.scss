@@ -1,40 +1,31 @@
-$body-bg-color: darken(white, 15%);
-$choice-font-size: 1.5rem;
-$color: #c97f20;
+$choice-font-size: 3vh;
+$color: #3d372f;
+$color-mustard: #c87e1f;
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: sans-serif;
-  background-color: $body-bg-color;
-  margin: 0;
-}
-
-#root {
-  height: 100%;
+.screen {
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100vh;
 }
 
 .top-bar {
-  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #d9d9d9;
-  padding: 0.5rem;
+  padding: 1vh 1vh 0 1vh;
 }
 
 .top-bar-center-area {
   background-color: white;
-  padding: 0.5rem 2rem 0.5rem 2rem;
+  padding: 1vh 4vh 1vh 4vh;
   display: flex;
   justify-content: center;
   align-items: center;
 
   & > *:not(:last-child) {
-    margin-right: 0.5rem;
+    margin-right: 1vh;
   }
 }
 
@@ -43,13 +34,13 @@ body {
   outline: none;
   border: none;
   background-color: transparent;
-  padding: 0.2rem;
+  padding: 0.5vh;
   display: flex;
 }
 
 %deck-svg {
-  height: 3rem;
-  width: 3rem;
+  height: 4vh;
+  width: 4vh;
 }
 
 .deck-success {
@@ -63,62 +54,70 @@ body {
 .record-text {
   display: block;
 
-  font-size: 2.5rem;
+  font-size: 4vh;
   font-weight: 500;
 }
 
 .card {
+  height: 75vh;
+  width: calc(75vh * 4 / 6);
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: auto;
-  width: 100%;
-  padding: 1.5rem;
+
+  padding: 2vh;
   opacity: 0;
 
   border-radius: 12px;
   border-color: black;
   border-style: solid;
-  border-width: 3px;
+  border-width: 0.4vh;
   background-color: white;
 
   position: relative;
 }
 
 .main-section {
-  height: auto;
-  max-width: 30rem;
-
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  padding: 0.5rem;
+  padding: 1vh;
 }
 
 .img {
   display: block;
-  height: 18rem;
-
-  width: 100%;
+  height: 40vh;
+  width: calc(40vh * 4 / 3);
+  max-width: 100%;
 }
 
 /* **************** */
 .question {
-  margin: 0.5rem 0 0 0;
+  font-size: 4vh;
+  margin: 1vh 0 1vh 0;
   visibility: visible;
 }
 
 .choices {
+  width: 100%;
   display: block;
   padding-inline-start: 0px;
+  margin: 0;
   list-style: none;
-  display: block;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .choice-li {
+  min-height: 6vh;
+  width: 90%;
+
   display: flex;
   align-items: center;
-  border: 2px solid $color;
+  border: 0.2vh solid $color;
   border-radius: 8px;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
 
@@ -133,12 +132,13 @@ body {
   }
 
   &[data-bg-color="primary"] {
-    background-color: $color;
+    background-color: $color-mustard;
+    border-color: $color-mustard;
   }
 
   &[data-state="hoverable"]:hover,
   &[data-state="hoverable"]:active {
-    background-color: rgba($color, 0.3);
+    background-color: rgba($color-mustard, 0.3);
   }
 }
 
@@ -150,8 +150,8 @@ body {
   display: block;
   user-select: none;
   background-color: transparent;
-  margin-bottom: 4px;
-  padding: 0 1rem;
+  margin-bottom: 0.3vh;
+  padding: 0 2vh;
 
   font-size: $choice-font-size;
   font-weight: 700;
@@ -173,9 +173,9 @@ body {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 
-  width: 2.2rem;
-  height: 2.2rem;
-  font-size: $choice-font-size - 0.5rem;
+  width: 3vh;
+  height: 3vh;
+  font-size: $choice-font-size - 1vh;
   font-weight: 700;
 
   justify-content: center;
@@ -203,6 +203,8 @@ body {
 }
 
 .progress-bar-wrapper {
+  height: 5vh;
+  margin-bottom: 0.2vh;
   &[data-hidden] {
     visibility: hidden;
   }
@@ -219,20 +221,25 @@ body {
 
 .next-button {
   cursor: pointer;
-  height: 2rem;
-  padding: 0 0 0 0;
-  font-size: 1.5rem;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
   outline: none;
+
+  padding: 0 0 0 0;
+  font-size: 2vh;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
-  width: 3rem;
-  height: 3rem;
+  width: 6vh;
+  min-width: 60px; /* for accessibility, buttons should be at least 16mm */
+  height: 6vh;
+  min-height: 60px; /* for accessibility, buttons should be at least 16mm */
   border-radius: 50%;
   background-color: #0b6afb;
   color: white;
 
   position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+  bottom: 1vh;
+  right: 1vh;
+  z-index: 2;
 
   animation: fadeIn 1s;
 }
