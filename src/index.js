@@ -16,6 +16,7 @@ import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
+import { assign } from "xstate";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -42,6 +43,7 @@ const Page = React.memo(
     onFinish,
     answerChoice,
     onChoose,
+    onReveal,
     startTimer,
     cancelTimer,
     hasTimedOut
@@ -49,89 +51,90 @@ const Page = React.memo(
     const cardRef = React.useRef();
     const imageRef = React.useRef();
     const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
-
-    const [{ value: cardState }, send] = useMachine(machine, {
-      devTools: true,
-      actions: {
-        startTimer: startTimer,
-        animateCardSlideAndFadeIn: () => {
-          const animation = cardRef.current.animate(
-            [
+    const [{ value: cardState, context }, send] = useMachine(
+      machine.withContext(machine.initialState.context),
+      {
+        devTools: true,
+        actions: {
+          startTimer: startTimer,
+          animateCardSlideAndFadeIn: () => {
+            const animation = cardRef.current.animate(
+              [
+                {
+                  transform: "translateX(-60px)",
+                  opacity: 0
+                },
+                {
+                  transform: "none",
+                  opacity: 1
+                }
+              ],
               {
-                transform: "translateX(-60px)",
-                opacity: 0
-              },
-              {
-                transform: "none",
-                opacity: 1
+                duration: 1000,
+                easing: "ease-in-out",
+                fill: "both"
               }
-            ],
-            {
-              duration: 1000,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
+            );
 
-          animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
-        },
-        animateCardSlideAndFadeOut: () => {
-          const animation = cardRef.current.animate(
-            [
+            animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
+          },
+          animateCardSlideAndFadeOut: () => {
+            const animation = cardRef.current.animate(
+              [
+                {
+                  transform: "none",
+                  opacity: 1
+                },
+                {
+                  transform: "translateX(60px)",
+                  opacity: 0
+                }
+              ],
               {
-                transform: "none",
-                opacity: 1
-              },
-              {
-                transform: "translateX(60px)",
-                opacity: 0
+                duration: 1000,
+                easing: "ease-in-out",
+                fill: "both"
               }
-            ],
-            {
-              duration: 1000,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
+            );
 
-          animation.onfinish = onFinish;
-        },
-        animateAnswerListItem: () => {
-          const answerChoiceIndex = choices.findIndex(
-            choice => choice === answerChoice
-          );
-          const answerChoiceRef = choiceRefs[answerChoiceIndex];
-          answerChoiceRef.current.animate(
-            [
+            animation.onfinish = onFinish;
+          },
+          animateAnswerListItem: () => {
+            const answerChoiceIndex = choices.findIndex(
+              choice => choice === answerChoice
+            );
+            const answerChoiceRef = choiceRefs[answerChoiceIndex];
+            answerChoiceRef.current.animate(
+              [
+                {
+                  opacity: 0.2
+                },
+                {
+                  opacity: 1
+                }
+              ],
               {
-                opacity: 0.2
-              },
-              {
-                opacity: 1
+                duration: 500,
+                easing: "ease-in-out",
+                fill: "both"
               }
-            ],
-            {
-              duration: 500,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
-        },
-        updateChoice: (_, { choice }) => {
-          const isChoiceCorrect = onChoose(choice);
-          cancelTimer();
-          setState(previousState => ({
-            ...previousState,
-            chosenChoice: choice,
-            isChoiceCorrect: isChoiceCorrect
-          }));
-        },
-        onFinish: onFinish
+            );
+          },
+          updateChoice: assign((_, { choice }) => {
+            const isChoiceCorrect = onChoose(choice);
+            cancelTimer();
+            return {
+              isChoiceCorrect: isChoiceCorrect,
+              chosenChoice: choice
+            };
+          }),
+          onReveal: (context, _) => onReveal(context.isChoiceCorrect),
+          onFinish: onFinish
+        }
       }
-    });
-    const [{ chosenChoice }, setState] = React.useState({
-      chosenChoice: null
-    });
+    );
+
+    const { chosenChoice, isChoiceCorrect } = context;
 
     React.useEffect(() => {
       if (hasTimedOut) {
@@ -142,97 +145,86 @@ const Page = React.memo(
     console.log("cardState:", cardState);
 
     return (
-      <div className="screen">
-        <div className="top-bar">
-          <div className="top-bar-center-area">
-            <DeckSuccess className="deck-success" />
-            <span className="record-text">7 of 15</span>
-            <button className="deck-button">
-              <DeckAll className="deck-all" />
-            </button>
-          </div>
+      <div className="main-section">
+        <div
+          className="progress-bar-wrapper"
+          data-hidden={
+            ["entering", "moving"].includes(cardState) ? "" : undefined
+          }
+        >
+          <ProgressBarContainer />
         </div>
-        <div className="main-section">
-          <div
-            className="progress-bar-wrapper"
-            data-hidden={
-              ["entering", "moving"].includes(cardState) ? "" : undefined
-            }
+        <div className="card" ref={cardRef} data-state={cardState} style={{}}>
+          {cardState === "revealingAnswer" ? (
+            <button className="next-button" onClick={() => send("NEXT")}>
+              <FontAwesomeIcon icon={faArrowRight} />
+            </button>
+          ) : (
+            undefined
+          )}
+          <img
+            src={imageUrl}
+            alt="dog"
+            className="img"
+            ref={imageRef}
+            data-state={cardState === "moving" ? "moving" : undefined}
+          />
+          <h2 className="question">Which dog type is it?</h2>
+          <ol
+            className="choices"
+            data-state={cardState === "moving" ? "moving" : "idle"}
           >
-            <ProgressBarContainer />
-          </div>
-          <div className="card" ref={cardRef} data-state={cardState} style={{}}>
-            {cardState === "revealingAnswer" ? (
-              <button className="next-button" onClick={() => send("NEXT")}>
-                <FontAwesomeIcon icon={faArrowRight} />
-              </button>
-            ) : (
-              undefined
-            )}
-            <img
-              src={imageUrl}
-              alt="dog"
-              className="img"
-              ref={imageRef}
-              data-state={cardState === "moving" ? "moving" : undefined}
-            />
-            <h2 className="question">Which dog type is it?</h2>
-            <ol
-              className="choices"
-              data-state={cardState === "moving" ? "moving" : "idle"}
-            >
-              {choices.map((choice, index) => (
-                <li
-                  onClick={() => {
-                    send("CLICKED_CHOICE", { choice });
-                  }}
-                  key={choice}
-                  ref={choiceRefs[index]}
-                  className="choice-li"
-                  data-bg-color={
+            {choices.map((choice, index) => (
+              <li
+                onClick={() => {
+                  send("CLICKED_CHOICE", { choice });
+                }}
+                key={choice}
+                ref={choiceRefs[index]}
+                className="choice-li"
+                data-bg-color={
+                  ["revealingAnswer", "moving"].includes(cardState) &&
+                  choice === answerChoice
+                    ? "green"
+                    : ["chosen", "revealingAnswer", "moving"].includes(
+                        cardState
+                      ) && choice === chosenChoice
+                    ? "primary"
+                    : ["entering", "idle"].includes(cardState)
+                    ? "hoverable"
+                    : undefined
+                }
+              >
+                <div
+                  className="choice-alphabet"
+                  data-color={
+                    /* Watch out, order matters here */
                     ["revealingAnswer", "moving"].includes(cardState) &&
                     choice === answerChoice
-                      ? "green"
+                      ? "black"
                       : ["chosen", "revealingAnswer", "moving"].includes(
                           cardState
                         ) && choice === chosenChoice
-                      ? "primary"
-                      : ["entering", "idle"].includes(cardState)
-                      ? "hoverable"
+                      ? "white"
                       : undefined
                   }
                 >
-                  <div
-                    className="choice-alphabet"
-                    data-color={
-                      /* Watch out, order matters here */
-                      ["revealingAnswer", "moving"].includes(cardState) &&
-                      choice === answerChoice
-                        ? "black"
-                        : ["chosen", "revealingAnswer", "moving"].includes(
-                            cardState
-                          ) && choice === chosenChoice
-                        ? "white"
-                        : undefined
-                    }
-                  >
-                    {`${indexToAlphabet[index]}:`}
-                  </div>
-                  <span
-                    className="choice-text"
-                    data-color={
-                      ["revealingAnswer", "moving"].includes(cardState) &&
-                      choice === answerChoice
-                        ? "white"
-                        : undefined
-                    }
-                  >
-                    {choice}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
+                  {`${indexToAlphabet[index]}:`}
+                </div>
+                <span
+                  className="choice-text"
+                  data-color={
+                    ["revealingAnswer", "moving"].includes(cardState) &&
+                    choice === answerChoice
+                      ? "white"
+                      : undefined
+                  }
+                >
+                  {choice}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     );
@@ -271,12 +263,32 @@ const pickNrandomlyFromArray = (n, arr) => {
   return arr.sort(() => 0.5 - Math.random()).slice(0, n);
 };
 
+const generateUniqueId = () => {
+  // uuidv4
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (
+      c ^
+      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+    ).toString(16)
+  );
+};
+
 const App = () => {
   const [
-    { cardsCount, dog, breeds, choices, isLoading },
+    {
+      cardsCount,
+      currentCardId,
+      successCardsCount,
+      dog,
+      breeds,
+      choices,
+      isLoading
+    },
     setState
   ] = React.useState({
     cardsCount: 0,
+    currentCardId: null,
+    successCardsCount: 0,
     dog: {
       image: null,
       breed: null
@@ -324,9 +336,11 @@ const App = () => {
       const randomlyOrderedChoices = choices.sort(() => 0.5 - Math.random());
       resolve({ breeds, dog, choices: randomlyOrderedChoices });
     }).then(({ breeds, dog, choices }) => {
+      const cardId = generateUniqueId();
       setState(previousState => {
         return {
           ...previousState,
+          currentCardId: cardId,
           dog: dog,
           breeds: breeds,
           choices: choices,
@@ -343,34 +357,50 @@ const App = () => {
 
   return (
     <StylesProvider injectFirst>
-      {isLoading ? (
-        <CircularProgress
-          className="spinner"
-          variant="indeterminate"
-          style={{ opacity: 0.1 }}
-        />
-      ) : (
-        <>
+      <div className="screen">
+        <div className="top-bar">
+          <div className="top-bar-center-area">
+            <DeckSuccess className="deck-success" />
+            <span className="record-text">
+              {successCardsCount} from {cardsCount}
+            </span>
+            <button className="deck-button">
+              <DeckAll className="deck-all" />
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <CircularProgress
+            className="spinner"
+            variant="indeterminate"
+            style={{ opacity: 0.1 }}
+          />
+        ) : (
           <PageContainer
-            key={cardsCount}
+            key={currentCardId}
             imageUrl={dog.image.src}
             choices={choices}
             answerChoice={dog.breed}
             onChoose={chosenBreed => {
-              const outcome = chosenBreed === dog.breed;
+              const isChoiceCorrect = chosenBreed === dog.breed;
+
+              return isChoiceCorrect;
+            }}
+            onReveal={isChoiceCorrect => {
               setState(previousState => ({
                 ...previousState,
-                cardState: outcome
+                successCardsCount: isChoiceCorrect
+                  ? previousState.successCardsCount + 1
+                  : previousState.successCardsCount
               }));
-
-              return outcome;
             }}
             onFinish={() => {
               createNewCard();
             }}
           />
-        </>
-      )}
+        )}
+      </div>
     </StylesProvider>
   );
 };
