@@ -1,4 +1,4 @@
-$choice-font-size: 3vh;
+$choice-font-size: 2.88vh;
 $color: #3d372f;
 $color-mustard: #c87e1f;
 
@@ -121,6 +121,8 @@ $color-mustard: #c87e1f;
   border-radius: 8px;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
 
+  padding: 0 2vh;
+
   margin-bottom: 0.5rem;
   &:last-child {
     margin-bottom: 0;
@@ -151,7 +153,6 @@ $color-mustard: #c87e1f;
   user-select: none;
   background-color: transparent;
   margin-bottom: 0.3vh;
-  padding: 0 2vh;
 
   font-size: $choice-font-size;
   font-weight: 700;
@@ -175,16 +176,17 @@ $color-mustard: #c87e1f;
 
   width: 3vh;
   height: 3vh;
-  font-size: $choice-font-size - 1vh;
+  font-size: $choice-font-size;
   font-weight: 700;
 
   justify-content: center;
   align-items: center;
-  border-radius: 100%;
   text-align: center;
   display: flex;
 
-  color: $color;
+  margin-right: 8px;
+
+  color: $color-mustard;
 
   &[data-color="white"] {
     color: white;
@@ -234,6 +236,7 @@ $color-mustard: #c87e1f;
   min-height: 60px; /* for accessibility, buttons should be at least 16mm */
   border-radius: 50%;
   background-color: #0b6afb;
+  border: #0b6afb;
   color: white;
 
   position: absolute;
