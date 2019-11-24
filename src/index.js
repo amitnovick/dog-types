@@ -15,6 +15,7 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import Axios from "axios";
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -261,58 +262,83 @@ const PageContainer = props => {
   );
 };
 
+/* dogImageUrl: string, e.g. 'https://images.dog.ceo/breeds/stbernard/n02109525_8312.jpg' */
+const getBreedFromDogImageUrl = dogImageUrl => {
+  return dogImageUrl.match(/breeds\/(.*?)\//)[1];
+};
+
+const pickNrandomlyFromArray = (n, arr) => {
+  return arr.sort(() => 0.5 - Math.random()).slice(0, n);
+};
+
 const App = () => {
-  const [{ currentDogID, dogs, isLoading }, setState] = React.useState({
-    currentDogID: 0,
-    dogs: {
-      0: {
-        imageUrl: "https://images.dog.ceo/breeds/malinois/n02105162_2079.jpg",
-        breed: "malinois",
-        cardState: "initial",
-        choices: ["malinois", "pinscher", "golden-retriever"]
-      },
-      1: {
-        imageUrl:
-          "https://images.dog.ceo/breeds/pointer-german/n02100236_5628.jpg",
-        breed: "pointer-german",
-        cardState: "initial",
-        choices: ["hound-british", "pointer-german", "golden-retriever"]
-      },
-      2: {
-        imageUrl:
-          "https://images.dog.ceo/breeds/hound-afghan/n02088094_10263.jpg",
-        breed: "hound-afghan",
-        cardState: "initial",
-        choices: ["pointer-german", "hound-british", "hound-afghan"]
-      }
+  const [
+    { cardsCount, dog, breeds, choices, isLoading },
+    setState
+  ] = React.useState({
+    cardsCount: 0,
+    dog: {
+      image: null,
+      breed: null
     },
+    choices: null,
+    breeds: null,
     isLoading: true
   });
 
-  React.useEffect(() => {
+  const createNewCard = () => {
+    const RANDOM_DOG_ENDPOINT_URL = "https://dog.ceo/api/breeds/image/random";
+    const ALL_BREEDS_ENDPOINT_URL = " https://dog.ceo/api/breeds/list/all";
     new Promise(async resolve => {
-      const dogsWithImages = await Promise.all(
-        Object.entries(dogs).map(async ([dogID, { imageUrl }]) => {
-          const image = await preloadImage(imageUrl);
-          return [dogID, image];
-        })
-      );
-
-      const updatedDogs = dogsWithImages.reduce(
-        (accumulatedDogs, [dogID, image]) => {
-          return {
-            ...accumulatedDogs,
-            [dogID]: { ...dogs[dogID], image: image }
-          };
-        },
-        {}
-      );
-      resolve(updatedDogs);
-    }).then(updatedDogs => {
       setState(previousState => {
-        return { ...previousState, dogs: updatedDogs, isLoading: false };
+        return {
+          ...previousState,
+          isLoading: true
+        };
+      });
+      const {
+        data: { message: breedsObject }
+      } = await Axios.get(ALL_BREEDS_ENDPOINT_URL);
+      const breeds = Object.entries(breedsObject).reduce(
+        (accumulated, [archBreed, subBreeds]) => {
+          return [
+            ...accumulated,
+            archBreed,
+            ...subBreeds.map(subBreed => archBreed + "-" + subBreed)
+          ];
+        },
+        []
+      );
+      const {
+        data: { message: dogImageUrl }
+      } = await Axios.get(RANDOM_DOG_ENDPOINT_URL);
+      const breed = getBreedFromDogImageUrl(dogImageUrl);
+      const image = await preloadImage(dogImageUrl);
+      const dog = { image, breed };
+      const arrayWithoutSpecificBreed = breeds.filter(b => b !== breed);
+      const twoRandomChoices = pickNrandomlyFromArray(
+        2,
+        arrayWithoutSpecificBreed
+      );
+      const choices = [...twoRandomChoices, breed];
+      const randomlyOrderedChoices = choices.sort(() => 0.5 - Math.random());
+      resolve({ breeds, dog, choices: randomlyOrderedChoices });
+    }).then(({ breeds, dog, choices }) => {
+      setState(previousState => {
+        return {
+          ...previousState,
+          dog: dog,
+          breeds: breeds,
+          choices: choices,
+          isLoading: false,
+          cardsCount: previousState.cardsCount + 1
+        };
       });
     });
+  };
+
+  React.useEffect(() => {
+    createNewCard();
   }, []);
 
   return (
@@ -326,12 +352,12 @@ const App = () => {
       ) : (
         <>
           <PageContainer
-            key={currentDogID}
-            imageUrl={dogs[currentDogID].image.src}
-            choices={dogs[currentDogID].choices}
-            answerChoice={dogs[currentDogID].breed}
+            key={cardsCount}
+            imageUrl={dog.image.src}
+            choices={choices}
+            answerChoice={dog.breed}
             onChoose={chosenBreed => {
-              const outcome = chosenBreed === dogs[currentDogID].breed;
+              const outcome = chosenBreed === dog.breed;
               setState(previousState => ({
                 ...previousState,
                 cardState: outcome
@@ -339,12 +365,9 @@ const App = () => {
 
               return outcome;
             }}
-            onFinish={() =>
-              setState(previousState => ({
-                ...previousState,
-                currentDogID: mod(currentDogID + 1, Object.keys(dogs).length)
-              }))
-            }
+            onFinish={() => {
+              createNewCard();
+            }}
           />
         </>
       )}
