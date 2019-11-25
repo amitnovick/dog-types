@@ -1,5 +1,4 @@
-$choice-font-size: 2.88vh;
-$color: #3d372f;
+$choice-font-size: 2.7vh;
 $color-mustard: #c87e1f;
 
 .screen {
@@ -117,7 +116,7 @@ $color-mustard: #c87e1f;
 
   display: flex;
   align-items: center;
-  border: 0.2vh solid $color;
+  border: 0.2vh solid #3d372f;
   border-radius: 8px;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
 
@@ -152,7 +151,6 @@ $color-mustard: #c87e1f;
   display: block;
   user-select: none;
   background-color: transparent;
-  margin-bottom: 0.3vh;
 
   font-size: $choice-font-size;
   font-weight: 700;

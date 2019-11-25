@@ -1,20 +1,27 @@
 import { Machine } from "xstate";
 
 const machine = Machine({
-  initial: "entering",
+  initial: "choosing",
+  id: "card",
   states: {
-    entering: {
-      entry: "animateCardSlideAndFadeIn",
+    choosing: {
+      initial: "entering",
+      states: {
+        entering: {
+          entry: "animateCardSlideAndFadeIn",
+          on: {
+            FINISHED_ENTRANCE_ANIMATION: "stationary"
+          }
+        },
+        stationary: {
+          entry: "startTimer",
+          on: {
+            CHOICE_WINDOW_TIMEOUT: "#card.revealingAnswer"
+          }
+        }
+      },
       on: {
-        FINISHED_ENTRANCE_ANIMATION: "idle",
         CLICKED_CHOICE: { target: "chosen", actions: "updateChoice" }
-      }
-    },
-    idle: {
-      entry: "startTimer",
-      on: {
-        CLICKED_CHOICE: { target: "chosen", actions: "updateChoice" },
-        CHOICE_WINDOW_TIMEOUT: "revealingAnswer"
       }
     },
     chosen: {
@@ -24,9 +31,9 @@ const machine = Machine({
     },
     revealingAnswer: {
       entry: ["onReveal", "animateAnswerListItem"],
-      on: { NEXT: "moving" }
+      on: { NEXT: "exiting" }
     },
-    moving: {
+    exiting: {
       entry: "animateCardSlideAndFadeOut"
     }
   }

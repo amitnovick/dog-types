@@ -60,7 +60,7 @@ const Page = React.memo(
       isChoiceCorrect: null,
       chosenChoice: null
     });
-    const [{ value: cardState }, send] = useMachine(
+    const [{ value: cardState, matches }, send] = useMachine(
       machine.withContext(machine.initialState.context),
       {
         devTools: true,
@@ -157,7 +157,7 @@ const Page = React.memo(
         <div
           className="progress-bar-wrapper"
           data-hidden={
-            ["entering", "moving"].includes(cardState) ? "" : undefined
+            matches("choosing.entering") || matches("exiting") ? "" : undefined
           }
         >
           <ProgressBarContainer />
@@ -175,12 +175,12 @@ const Page = React.memo(
             alt="dog"
             className="img"
             ref={imageRef}
-            data-state={cardState === "moving" ? "moving" : undefined}
+            data-state={cardState === "exiting" ? "moving" : undefined}
           />
           <h2 className="question">Which dog type is it?</h2>
           <ol
             className="choices"
-            data-state={cardState === "moving" ? "moving" : "idle"}
+            data-state={cardState === "exiting" ? "moving" : "idle"}
           >
             {choices.map((choice, index) => (
               <li
@@ -191,14 +191,14 @@ const Page = React.memo(
                 ref={choiceRefs[index]}
                 className="choice-li"
                 data-bg-color={
-                  ["revealingAnswer", "moving"].includes(cardState) &&
+                  ["revealingAnswer", "exiting"].includes(cardState) &&
                   choice === answerChoice
                     ? "green"
-                    : ["chosen", "revealingAnswer", "moving"].includes(
+                    : ["chosen", "revealingAnswer", "exiting"].includes(
                         cardState
                       ) && choice === chosenChoice
                     ? "primary"
-                    : ["entering", "idle"].includes(cardState)
+                    : matches("choosing")
                     ? "hoverable"
                     : undefined
                 }
@@ -207,10 +207,10 @@ const Page = React.memo(
                   className="choice-alphabet"
                   data-color={
                     /* Watch out, order matters here */
-                    ["revealingAnswer", "moving"].includes(cardState) &&
+                    ["revealingAnswer", "exiting"].includes(cardState) &&
                     choice === answerChoice
                       ? "black"
-                      : ["chosen", "revealingAnswer", "moving"].includes(
+                      : ["chosen", "revealingAnswer", "exiting"].includes(
                           cardState
                         ) && choice === chosenChoice
                       ? "white"
@@ -222,7 +222,7 @@ const Page = React.memo(
                 <span
                   className="choice-text"
                   data-color={
-                    ["revealingAnswer", "moving"].includes(cardState) &&
+                    ["revealingAnswer", "exiting"].includes(cardState) &&
                     choice === answerChoice
                       ? "white"
                       : undefined
