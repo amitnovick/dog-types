@@ -228,7 +228,6 @@ $color-mustard: #c87e1f;
   outline: none;
 
   padding: 0 0 0 0;
-  font-size: 2vh;
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
   width: 6vh;
   min-width: 60px; /* for accessibility, buttons should be at least 16mm */
@@ -245,4 +244,9 @@ $color-mustard: #c87e1f;
   z-index: 2;
 
   animation: fadeIn 1s;
+
+  & > svg {
+    height: 55% !important;
+    width: 55% !important;
+  }
 }

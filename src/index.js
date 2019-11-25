@@ -16,11 +16,6 @@ import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
-import { assign } from "xstate";
-
-function mod(n, m) {
-  return ((n % m) + m) % m;
-}
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -34,6 +29,16 @@ const indexToAlphabet = {
   0: "A",
   1: "B",
   2: "C"
+};
+
+const formatDogTypeText = dogType => {
+  const names = dogType.split("-");
+  const capitalizedNames = names.map(
+    name => name.slice(0, 1).toUpperCase() + name.slice(1)
+  );
+  const reversedOrderCapitalizedNames = capitalizedNames.reverse();
+  const dogTypeText = reversedOrderCapitalizedNames.join(" ");
+  return dogTypeText;
 };
 
 const Page = React.memo(
@@ -51,7 +56,11 @@ const Page = React.memo(
     const cardRef = React.useRef();
     const imageRef = React.useRef();
     const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
-    const [{ value: cardState, context }, send] = useMachine(
+    const [{ isChoiceCorrect, chosenChoice }, setState] = React.useState({
+      isChoiceCorrect: null,
+      chosenChoice: null
+    });
+    const [{ value: cardState }, send] = useMachine(
       machine.withContext(machine.initialState.context),
       {
         devTools: true,
@@ -120,21 +129,20 @@ const Page = React.memo(
               }
             );
           },
-          updateChoice: assign((_, { choice }) => {
+          updateChoice: (_, { choice }) => {
             const isChoiceCorrect = onChoose(choice);
             cancelTimer();
-            return {
+            setState(previousState => ({
+              ...previousState,
               isChoiceCorrect: isChoiceCorrect,
               chosenChoice: choice
-            };
-          }),
-          onReveal: (context, _) => onReveal(context.isChoiceCorrect),
+            }));
+          },
+          onReveal: () => onReveal(isChoiceCorrect),
           onFinish: onFinish
         }
       }
     );
-
-    const { chosenChoice, isChoiceCorrect } = context;
 
     React.useEffect(() => {
       if (hasTimedOut) {
@@ -220,7 +228,7 @@ const Page = React.memo(
                       : undefined
                   }
                 >
-                  {choice}
+                  {formatDogTypeText(choice)}
                 </span>
               </li>
             ))}

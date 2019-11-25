@@ -2,10 +2,6 @@ import { Machine } from "xstate";
 
 const machine = Machine({
   initial: "entering",
-  context: {
-    isChoiceCorrect: null,
-    chosenChoice: null
-  },
   states: {
     entering: {
       entry: "animateCardSlideAndFadeIn",
