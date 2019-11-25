@@ -202,6 +202,7 @@ const Page = React.memo(
                     ? "hoverable"
                     : undefined
                 }
+                data-pointer={matches("choosing") ? "" : undefined}
               >
                 <div
                   className="choice-alphabet"
