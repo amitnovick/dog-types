@@ -17,6 +17,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
 import checkIsWebAnimationsSupported from "./utils/modernizrDetectFeatureWebAnimations.js";
+import checkDoesSupportDynamicImport from "./utils/detectFeatureDynamicImport";
+import dynamicImportPolyfill from "dynamic-import-polyfill";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -470,7 +472,18 @@ const loadApp = () => {
 (async () => {
   const isWebAnimationsSupported = checkIsWebAnimationsSupported();
   if (!isWebAnimationsSupported) {
-    await import("web-animations-js");
+    const doesSupportDynamicImport = checkDoesSupportDynamicImport();
+    if (!doesSupportDynamicImport) {
+      // This needs to be done before any dynamic imports are used.
+      dynamicImportPolyfill.initialize({
+        modulePath: "/public", // Defaults to '.'
+        importFunctionName: "$$import" // Defaults to '__import__'
+      });
+      // eslint-disable-next-line
+      await $$import("web-animations-js");
+    } else {
+      await import("web-animations-js");
+    }
   }
   loadApp();
 })();
