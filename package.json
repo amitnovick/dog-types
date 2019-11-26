@@ -15,8 +15,8 @@
     "normalize.css": "^8.0.1",
     "react": "16.8.0",
     "react-dom": "16.8.0",
-    "react-flip-toolkit": "latest",
     "react-scripts": "2.0.3",
+    "web-animations-js": "^2.3.2",
     "xstate": "^4.7.0-rc6"
   },
   "devDependencies": {},

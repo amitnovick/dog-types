@@ -16,6 +16,7 @@ import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
+import checkIsWebAnimationsSupported from "./utils/modernizrDetectFeatureWebAnimations.js";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -462,4 +463,14 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />, document.querySelector("#root"));
+const loadApp = () => {
+  ReactDOM.render(<App />, document.querySelector("#root"));
+};
+
+(async () => {
+  const isWebAnimationsSupported = checkIsWebAnimationsSupported();
+  if (!isWebAnimationsSupported) {
+    await import("web-animations-js");
+  }
+  loadApp();
+})();
