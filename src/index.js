@@ -473,13 +473,17 @@ const loadApp = () => {
   if (!isWebAnimationsSupported) {
     const doesSupportDynamicImport = checkDoesSupportDynamicImport();
     console.log("doesSupportDynamicImport:", doesSupportDynamicImport);
-    if (!doesSupportDynamicImport) {
-      console.log("doesn't support dynamic imports");
-    } else {
-      console.log("before polyfilling");
-      await import("web-animations-js");
-      console.log("after polyfilling");
-    }
+    console.log("before polyfilling");
+    await import("web-animations-js");
+    console.log("after polyfilling");
+
+    // if (!doesSupportDynamicImport) {
+    //   console.log("doesn't support dynamic imports");
+    // } else {
+    //   console.log("before polyfilling");
+    //   await import("web-animations-js");
+    //   console.log("after polyfilling");
+    // }
   }
   loadApp();
 })();
