@@ -471,16 +471,20 @@ const loadApp = () => {
 
 (async () => {
   const isWebAnimationsSupported = checkIsWebAnimationsSupported();
+  console.log("isWebAnimationsSupported:", isWebAnimationsSupported);
   if (!isWebAnimationsSupported) {
     const doesSupportDynamicImport = checkDoesSupportDynamicImport();
+    console.log("doesSupportDynamicImport:", doesSupportDynamicImport);
     if (!doesSupportDynamicImport) {
       // This needs to be done before any dynamic imports are used.
       dynamicImportPolyfill.initialize({
         modulePath: "/public", // Defaults to '.'
         importFunctionName: "$$import" // Defaults to '__import__'
       });
+      console.log("before calling $$import");
       // eslint-disable-next-line
       await $$import("web-animations-js");
+      console.log("after calling $$import");
     } else {
       await import("web-animations-js");
     }
