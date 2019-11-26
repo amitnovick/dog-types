@@ -6,9 +6,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
 
-import useTimer from "../ProgressBar/useTimer";
-import TimerContext from "../ProgressBar/TimerContext";
-import ProgressBarContainer from "../ProgressBar/ProgressBarContainer";
+import useTimer from "./ProgressBar/useTimer";
+import TimerContext from "./ProgressBar/TimerContext";
+import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
 import machine from "./machine";
 import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
