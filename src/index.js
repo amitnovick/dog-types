@@ -18,7 +18,6 @@ import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
 
 import checkIsWebAnimationsSupported from "./utils/modernizrDetectFeatureWebAnimations.js";
-import checkDoesSupportDynamicImport from "./utils/detectFeatureDynamicImport";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -469,21 +468,8 @@ const loadApp = () => {
 
 (async () => {
   const isWebAnimationsSupported = checkIsWebAnimationsSupported();
-  console.log("isWebAnimationsSupported:", isWebAnimationsSupported);
   if (!isWebAnimationsSupported) {
-    const doesSupportDynamicImport = checkDoesSupportDynamicImport();
-    console.log("doesSupportDynamicImport:", doesSupportDynamicImport);
-    console.log("before polyfilling");
     await import("web-animations-js");
-    console.log("after polyfilling");
-
-    // if (!doesSupportDynamicImport) {
-    //   console.log("doesn't support dynamic imports");
-    // } else {
-    //   console.log("before polyfilling");
-    //   await import("web-animations-js");
-    //   console.log("after polyfilling");
-    // }
   }
   loadApp();
 })();
