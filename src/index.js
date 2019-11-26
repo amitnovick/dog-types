@@ -16,9 +16,9 @@ import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
+
 import checkIsWebAnimationsSupported from "./utils/modernizrDetectFeatureWebAnimations.js";
 import checkDoesSupportDynamicImport from "./utils/detectFeatureDynamicImport";
-import dynamicImportPolyfill from "dynamic-import-polyfill";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -152,8 +152,6 @@ const Page = React.memo(
         send("CHOICE_WINDOW_TIMEOUT");
       }
     }, [hasTimedOut]);
-
-    console.log("cardState:", cardState);
 
     return (
       <div className="main-section">
@@ -476,17 +474,11 @@ const loadApp = () => {
     const doesSupportDynamicImport = checkDoesSupportDynamicImport();
     console.log("doesSupportDynamicImport:", doesSupportDynamicImport);
     if (!doesSupportDynamicImport) {
-      // This needs to be done before any dynamic imports are used.
-      dynamicImportPolyfill.initialize({
-        modulePath: "/public", // Defaults to '.'
-        importFunctionName: "$$import" // Defaults to '__import__'
-      });
-      console.log("before calling $$import");
-      // eslint-disable-next-line
-      await $$import("web-animations-js");
-      console.log("after calling $$import");
+      console.log("doesn't support dynamic imports");
     } else {
+      console.log("before polyfilling");
       await import("web-animations-js");
+      console.log("after polyfilling");
     }
   }
   loadApp();

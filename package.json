@@ -1,5 +1,5 @@
 {
-  "name": "react-flip-toolkit-example-expanding-div-v2-dog-with-layout",
+  "name": "dog-types",
   "version": "1.0.0",
   "description": "",
   "keywords": [],
@@ -17,6 +17,7 @@
     "react": "16.8.0",
     "react-dom": "16.8.0",
     "react-scripts": "2.0.3",
+    "shimport": "^1.0.1",
     "web-animations-js": "^2.3.2",
     "xstate": "^4.7.0-rc6"
   },
