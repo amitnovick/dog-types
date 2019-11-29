@@ -453,6 +453,26 @@ const App = () => {
           />
         )}
       </div>
+      <footer className="footer">
+        <p>
+          Made by{" "}
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/amitnovick"
+          >
+            Amit Novick
+          </a>
+        </p>
+        <p>
+          Attribution: stack of paper, Created by Ale Estrada from the Noun
+          Project (CCBY)
+        </p>
+        <p>
+          Attribution: checkmark, Created by arif fajar yulianto, ID from the
+          Noun Project (CCBY)
+        </p>
+      </footer>
     </StylesProvider>
   );
 };
