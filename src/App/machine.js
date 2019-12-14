@@ -34,7 +34,16 @@ const machine = Machine({
       on: { NEXT: "exiting" }
     },
     exiting: {
-      entry: "animateCardSlideAndFadeOut"
+      entry: "animateCardSlideAndFadeOut",
+      on: {
+        FINISHED_EXIT_ANIMATION: "preparingCard"
+      }
+    },
+    preparingCard: {
+      invoke: {
+        src: "prepareCard",
+        onDone: "choosing"
+      }
     }
   }
 });

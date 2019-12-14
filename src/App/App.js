@@ -7,12 +7,11 @@ import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import Axios from "axios";
 
 import useTimer from "./ProgressBar/useTimer";
-import TimerContext from "./ProgressBar/TimerContext";
-import ProgressBarContainer from "./ProgressBar/ProgressBarContainer";
 import machine from "./machine";
 import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import "./styles.scss";
+import ProgressBar from "./ProgressBar/ProgressBar";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -48,6 +47,8 @@ const Page = React.memo(
     onReveal,
     startTimer,
     cancelTimer,
+    timer,
+    duration,
     hasTimedOut
   }) => {
     const cardRef = React.useRef();
@@ -155,7 +156,7 @@ const Page = React.memo(
             matches("choosing.entering") || matches("exiting") ? "" : undefined
           }
         >
-          <ProgressBarContainer />
+          <ProgressBar timer={timer} duration={duration} />
         </div>
         <div className="card" ref={cardRef} data-state={cardState} style={{}}>
           {cardState === "revealingAnswer" ? (
@@ -244,17 +245,17 @@ const PageContainer = props => {
     duration: TIMER_DURATION_MS
   });
 
+  console.log("page container");
+
   return (
-    <TimerContext.Provider
-      value={{ timer: timer, duration: TIMER_DURATION_MS }}
-    >
-      <Page
-        {...props}
-        startTimer={startTimer}
-        cancelTimer={cancelTimer}
-        hasTimedOut={hasTimedOut}
-      />
-    </TimerContext.Provider>
+    <Page
+      {...props}
+      startTimer={startTimer}
+      cancelTimer={cancelTimer}
+      hasTimedOut={hasTimedOut}
+      timer={timer}
+      duration={TIMER_DURATION_MS}
+    />
   );
 };
 
@@ -278,7 +279,7 @@ const generateUniqueId = () => {
 };
 
 function shuffle(array) {
-  var currentIndex = array.length,
+  let currentIndex = array.length,
     temporaryValue,
     randomIndex;
 
