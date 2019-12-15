@@ -318,7 +318,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
           <CircularProgress
             className="spinner"
             variant="indeterminate"
-            style={{ opacity: 0.1 }}
+            style={{ opacity: 0.5 }}
           />
         ) : (
           <div className="main-section" key={currentCardId}>
