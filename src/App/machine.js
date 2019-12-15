@@ -48,7 +48,6 @@ const machine = Machine({
       on: { NEXT: "exiting" }
     },
     exiting: {
-      entry: "animateCardSlideAndFadeOut",
       on: {
         FINISHED_EXIT_ANIMATION: "preparingCard"
       }

@@ -175,27 +175,6 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
       startTimer: () => {
         startTimer();
       },
-      animateCardSlideAndFadeOut: () => {
-        const animation = cardRef.current.animate(
-          [
-            {
-              transform: "none",
-              opacity: 1
-            },
-            {
-              transform: "translateX(60px)",
-              opacity: 0
-            }
-          ],
-          {
-            duration: 1000,
-            easing: "ease-in-out",
-            fill: "both"
-          }
-        );
-
-        animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
-      },
       updateChoice: (_, { choice }) => {
         cancelTimer();
         const isChoiceCorrect = onChoose(choice);
@@ -276,6 +255,30 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
       );
     }
   }, [matches("revealingAnswer")]);
+
+  React.useLayoutEffect(() => {
+    if (matches("exiting") && !previousMatches("exiting")) {
+      const animation = cardRef.current.animate(
+        [
+          {
+            transform: "none",
+            opacity: 1
+          },
+          {
+            transform: "translateX(60px)",
+            opacity: 0
+          }
+        ],
+        {
+          duration: 1000,
+          easing: "ease-in-out",
+          fill: "both"
+        }
+      );
+
+      animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
+    }
+  }, [matches("exiting")]);
 
   React.useEffect(() => {
     if (hasTimedOut) {
