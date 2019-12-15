@@ -179,69 +179,66 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
     };
   };
 
-  const [{ value: cardState, matches }, send] = useMachine(
-    machine.withContext(machine.initialState.context),
-    {
-      devTools: true,
-      actions: {
-        updateBreeds: (_, event) => {
-          const { data: breeds } = event;
-          setStateSync(previousState => ({
-            ...previousState,
-            breeds: breeds
-          }));
-        },
-        startTimer: () => {
-          startTimer();
-        },
-        animateCardSlideAndFadeOut: () => {
-          const animation = cardRef.current.animate(
-            [
-              {
-                transform: "none",
-                opacity: 1
-              },
-              {
-                transform: "translateX(60px)",
-                opacity: 0
-              }
-            ],
-            {
-              duration: 1000,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
-
-          animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
-        },
-        updateChoice: (_, { choice }) => {
-          cancelTimer();
-          const isChoiceCorrect = onChoose(choice);
-          setStateSync(previousState => ({
-            ...previousState,
-            isChoiceCorrect: isChoiceCorrect,
-            chosenChoice: choice
-          }));
-        },
-        onReveal: () => onReveal(isChoiceCorrect)
+  const [{ value: cardState, matches }, send] = useMachine(machine, {
+    devTools: true,
+    actions: {
+      updateBreeds: (_, event) => {
+        const { data: breeds } = event;
+        setStateSync(previousState => ({
+          ...previousState,
+          breeds: breeds
+        }));
       },
-      services: {
-        fetchBreeds: () => {
-          return fetchBreeds();
-        },
-        prepareCard: () => {
-          return createNewCard().then(newCardData => {
-            setStateSync(previousState => ({
-              ...previousState,
-              ...newCardData,
-              cardsCount: previousState.cardsCount + 1
-            }));
-          });
-        }
+      startTimer: () => {
+        startTimer();
+      },
+      animateCardSlideAndFadeOut: () => {
+        const animation = cardRef.current.animate(
+          [
+            {
+              transform: "none",
+              opacity: 1
+            },
+            {
+              transform: "translateX(60px)",
+              opacity: 0
+            }
+          ],
+          {
+            duration: 1000,
+            easing: "ease-in-out",
+            fill: "both"
+          }
+        );
+
+        animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
+      },
+      updateChoice: (_, { choice }) => {
+        cancelTimer();
+        const isChoiceCorrect = onChoose(choice);
+        setStateSync(previousState => ({
+          ...previousState,
+          isChoiceCorrect: isChoiceCorrect,
+          chosenChoice: choice
+        }));
+      },
+      onReveal: () => onReveal(isChoiceCorrect)
+    },
+    services: {
+      fetchBreeds: () => {
+        return fetchBreeds();
+      },
+      prepareCard: () => {
+        return createNewCard().then(newCardData => {
+          setStateSync(previousState => ({
+            ...previousState,
+            ...newCardData,
+            cardsCount: previousState.cardsCount + 1
+          }));
+        });
       }
     }
-  );
+  });
 
   const previousMatches = usePrevious(matches);
 
