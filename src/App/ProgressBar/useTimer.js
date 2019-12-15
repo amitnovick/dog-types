@@ -1,7 +1,8 @@
 import React from "react";
+import useGetterState from "../../utils/useGetterState";
 
 const useTimer = ({ onTimeout, duration }) => {
-  const [timer, setTimer] = React.useState(duration);
+  const [getTimer, setTimer] = useGetterState(duration);
 
   const intervalRef = React.useRef();
   const cancelTimerRef = React.useRef(() => {
@@ -9,6 +10,7 @@ const useTimer = ({ onTimeout, duration }) => {
   });
 
   const startTimerRef = React.useRef(() => {
+    setTimer(duration);
     intervalRef.current = createInterval();
   });
 
@@ -28,7 +30,7 @@ const useTimer = ({ onTimeout, duration }) => {
   };
 
   return {
-    timer: timer,
+    getTimer: getTimer,
     startTimer: startTimerRef.current,
     cancelTimer: cancelTimerRef.current
   };

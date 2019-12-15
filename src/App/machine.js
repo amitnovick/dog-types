@@ -1,14 +1,28 @@
 import { Machine } from "xstate";
 
 const machine = Machine({
-  initial: "choosing",
+  initial: "fetchingBreeds",
   id: "card",
   states: {
+    fetchingBreeds: {
+      invoke: {
+        src: "fetchBreeds",
+        onDone: {
+          target: "preparingCard",
+          actions: "updateBreeds"
+        }
+      }
+    },
+    preparingCard: {
+      invoke: {
+        src: "prepareCard",
+        onDone: "choosing"
+      }
+    },
     choosing: {
       initial: "entering",
       states: {
         entering: {
-          entry: "animateCardSlideAndFadeIn",
           on: {
             FINISHED_ENTRANCE_ANIMATION: "stationary"
           }
@@ -37,12 +51,6 @@ const machine = Machine({
       entry: "animateCardSlideAndFadeOut",
       on: {
         FINISHED_EXIT_ANIMATION: "preparingCard"
-      }
-    },
-    preparingCard: {
-      invoke: {
-        src: "prepareCard",
-        onDone: "choosing"
       }
     }
   }

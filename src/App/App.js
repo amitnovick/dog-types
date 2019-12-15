@@ -12,6 +12,7 @@ import { ReactComponent as DeckAll } from "./deck-all.svg";
 import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import "./styles.scss";
 import ProgressBar from "./ProgressBar/ProgressBar";
+import usePrevious from "../utils/usePrevious";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -37,227 +38,7 @@ const formatDogTypeText = dogType => {
   return dogTypeText;
 };
 
-const Page = React.memo(
-  ({
-    imageUrl,
-    choices,
-    onFinish,
-    answerChoice,
-    onChoose,
-    onReveal,
-    startTimer,
-    cancelTimer,
-    timer,
-    duration,
-    hasTimedOut
-  }) => {
-    const cardRef = React.useRef();
-    const imageRef = React.useRef();
-    const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
-    const [{ isChoiceCorrect, chosenChoice }, setState] = React.useState({
-      isChoiceCorrect: null,
-      chosenChoice: null
-    });
-    const [{ value: cardState, matches }, send] = useMachine(
-      machine.withContext(machine.initialState.context),
-      {
-        devTools: true,
-        actions: {
-          startTimer: startTimer,
-          animateCardSlideAndFadeIn: () => {
-            const animation = cardRef.current.animate(
-              [
-                {
-                  transform: "translateX(-60px)",
-                  opacity: 0
-                },
-                {
-                  transform: "none",
-                  opacity: 1
-                }
-              ],
-              {
-                duration: 1000,
-                easing: "ease-in-out",
-                fill: "both"
-              }
-            );
-
-            animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
-          },
-          animateCardSlideAndFadeOut: () => {
-            const animation = cardRef.current.animate(
-              [
-                {
-                  transform: "none",
-                  opacity: 1
-                },
-                {
-                  transform: "translateX(60px)",
-                  opacity: 0
-                }
-              ],
-              {
-                duration: 1000,
-                easing: "ease-in-out",
-                fill: "both"
-              }
-            );
-
-            animation.onfinish = onFinish;
-          },
-          animateAnswerListItem: () => {
-            const answerChoiceIndex = choices.findIndex(
-              choice => choice === answerChoice
-            );
-            const answerChoiceRef = choiceRefs[answerChoiceIndex];
-            answerChoiceRef.current.animate(
-              [
-                {
-                  opacity: 0.2
-                },
-                {
-                  opacity: 1
-                }
-              ],
-              {
-                duration: 500,
-                easing: "ease-in-out",
-                fill: "both"
-              }
-            );
-          },
-          updateChoice: (_, { choice }) => {
-            const isChoiceCorrect = onChoose(choice);
-            cancelTimer();
-            setState(previousState => ({
-              ...previousState,
-              isChoiceCorrect: isChoiceCorrect,
-              chosenChoice: choice
-            }));
-          },
-          onReveal: () => onReveal(isChoiceCorrect),
-          onFinish: onFinish
-        }
-      }
-    );
-
-    React.useEffect(() => {
-      if (hasTimedOut) {
-        send("CHOICE_WINDOW_TIMEOUT");
-      }
-    }, [hasTimedOut]);
-
-    return (
-      <div className="main-section">
-        <div
-          className="progress-bar-wrapper"
-          data-hidden={
-            matches("choosing.entering") || matches("exiting") ? "" : undefined
-          }
-        >
-          <ProgressBar timer={timer} duration={duration} />
-        </div>
-        <div className="card" ref={cardRef} data-state={cardState} style={{}}>
-          {cardState === "revealingAnswer" ? (
-            <button className="next-button" onClick={() => send("NEXT")}>
-              <FontAwesomeIcon icon={faArrowRight} />
-            </button>
-          ) : (
-            undefined
-          )}
-          <img
-            src={imageUrl}
-            alt="dog"
-            className="img"
-            ref={imageRef}
-            data-state={cardState === "exiting" ? "moving" : undefined}
-          />
-          <h2 className="question">Which dog type is it?</h2>
-          <ol
-            className="choices"
-            data-state={cardState === "exiting" ? "moving" : "idle"}
-          >
-            {choices.map((choice, index) => (
-              <li
-                onClick={() => {
-                  send("CLICKED_CHOICE", { choice });
-                }}
-                key={choice}
-                ref={choiceRefs[index]}
-                className="choice-li"
-                data-bg-color={
-                  ["revealingAnswer", "exiting"].includes(cardState) &&
-                  choice === answerChoice
-                    ? "green"
-                    : ["chosen", "revealingAnswer", "exiting"].includes(
-                        cardState
-                      ) && choice === chosenChoice
-                    ? "primary"
-                    : matches("choosing")
-                    ? "hoverable"
-                    : undefined
-                }
-                data-pointer={matches("choosing") ? "" : undefined}
-              >
-                <div
-                  className="choice-alphabet"
-                  data-color={
-                    /* Watch out, order matters here */
-                    ["revealingAnswer", "exiting"].includes(cardState) &&
-                    choice === answerChoice
-                      ? "black"
-                      : ["chosen", "revealingAnswer", "exiting"].includes(
-                          cardState
-                        ) && choice === chosenChoice
-                      ? "white"
-                      : undefined
-                  }
-                >
-                  {`${indexToAlphabet[index]}:`}
-                </div>
-                <span
-                  className="choice-text"
-                  data-color={
-                    ["revealingAnswer", "exiting"].includes(cardState) &&
-                    choice === answerChoice
-                      ? "white"
-                      : undefined
-                  }
-                >
-                  {formatDogTypeText(choice)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    );
-  }
-);
-
 const TIMER_DURATION_MS = 5000;
-
-const PageContainer = props => {
-  const [hasTimedOut, setHasTimedOut] = React.useState(false);
-  const { timer, startTimer, cancelTimer } = useTimer({
-    onTimeout: () => setHasTimedOut(true),
-    duration: TIMER_DURATION_MS
-  });
-
-  console.log("page container");
-
-  return (
-    <Page
-      {...props}
-      startTimer={startTimer}
-      cancelTimer={cancelTimer}
-      hasTimedOut={hasTimedOut}
-      timer={timer}
-      duration={TIMER_DURATION_MS}
-    />
-  );
-};
 
 /* dogImageUrl: string, e.g. 'https://images.dog.ceo/breeds/stbernard/n02109525_8312.jpg' */
 const getBreedFromDogImageUrl = dogImageUrl => {
@@ -299,18 +80,7 @@ function shuffle(array) {
 }
 
 const App = () => {
-  const [
-    {
-      cardsCount,
-      currentCardId,
-      successCardsCount,
-      dog,
-      breeds,
-      choices,
-      isLoading
-    },
-    setState
-  ] = React.useState({
+  const contextRef = React.useRef({
     cardsCount: 0,
     currentCardId: null,
     successCardsCount: 0,
@@ -320,12 +90,151 @@ const App = () => {
     },
     choices: null,
     breeds: null,
-    isLoading: true
+    isLoading: true,
+    isChoiceCorrect: null,
+    chosenChoice: null
   });
+
+  const setStateSync = updateFunction => {
+    contextRef.current = updateFunction(contextRef.current);
+  };
+
+  const {
+    current: {
+      cardsCount,
+      currentCardId,
+      successCardsCount,
+      dog,
+      choices,
+      isChoiceCorrect,
+      chosenChoice
+    }
+  } = contextRef;
+
+  const [hasTimedOut, setHasTimedOut] = React.useState(false);
+  const { getTimer, startTimer, cancelTimer } = useTimer({
+    onTimeout: () => setHasTimedOut(true),
+    duration: TIMER_DURATION_MS
+  });
+
+  const cardRef = React.useRef();
+  const imageRef = React.useRef();
+  const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
+
+  const { breed: answerChoice } = dog;
+
+  const onChoose = chosenBreed => {
+    const isChoiceCorrect = chosenBreed === dog.breed;
+
+    return isChoiceCorrect;
+  };
+
+  const onReveal = isChoiceCorrect => {
+    setStateSync(previousState => ({
+      ...previousState,
+      successCardsCount: isChoiceCorrect
+        ? previousState.successCardsCount + 1
+        : previousState.successCardsCount
+    }));
+  };
+
+  const [{ value: cardState, matches }, send] = useMachine(
+    machine.withContext(machine.initialState.context),
+    {
+      devTools: true,
+      actions: {
+        updateBreeds: (_, event) => {
+          const { data: breeds } = event;
+          setStateSync(previousState => ({
+            ...previousState,
+            breeds: breeds
+          }));
+        },
+        startTimer: () => {
+          startTimer();
+        },
+        animateCardSlideAndFadeOut: () => {
+          const animation = cardRef.current.animate(
+            [
+              {
+                transform: "none",
+                opacity: 1
+              },
+              {
+                transform: "translateX(60px)",
+                opacity: 0
+              }
+            ],
+            {
+              duration: 1000,
+              easing: "ease-in-out",
+              fill: "both"
+            }
+          );
+
+          animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
+        },
+        animateAnswerListItem: () => {
+          const answerChoiceIndex = choices.findIndex(
+            choice => choice === answerChoice
+          );
+          const answerChoiceRef = choiceRefs[answerChoiceIndex];
+          answerChoiceRef.current.animate(
+            [
+              {
+                opacity: 0.2
+              },
+              {
+                opacity: 1
+              }
+            ],
+            {
+              duration: 500,
+              easing: "ease-in-out",
+              fill: "both"
+            }
+          );
+        },
+        updateChoice: (_, { choice }) => {
+          console.log("cancel timer:", getTimer());
+          cancelTimer();
+          const isChoiceCorrect = onChoose(choice);
+          setStateSync(previousState => ({
+            ...previousState,
+            isChoiceCorrect: isChoiceCorrect,
+            chosenChoice: choice
+          }));
+        },
+        onReveal: () => onReveal(isChoiceCorrect)
+      },
+      services: {
+        fetchBreeds: () => {
+          return fetchBreeds();
+        },
+        prepareCard: () => {
+          return createNewCard().then(newCardData => {
+            setStateSync(previousState => ({
+              ...previousState,
+              ...newCardData,
+              cardsCount: previousState.cardsCount + 1
+            }));
+          });
+        }
+      }
+    }
+  );
+
+  const previousMatches = usePrevious(matches);
+
+  React.useEffect(() => {
+    if (hasTimedOut) {
+      send("CHOICE_WINDOW_TIMEOUT");
+      setHasTimedOut(false);
+    }
+  }, [hasTimedOut]);
 
   const fetchBreeds = async () => {
     const ALL_BREEDS_ENDPOINT_URL = " https://dog.ceo/api/breeds/list/all";
-
     const {
       data: { message: breedsObject }
     } = await Axios.get(ALL_BREEDS_ENDPOINT_URL);
@@ -342,7 +251,11 @@ const App = () => {
     return breeds;
   };
 
-  const createNewCard = async breeds => {
+  const createNewCard = async () => {
+    const {
+      current: { breeds }
+    } = contextRef;
+
     const RANDOM_DOG_ENDPOINT_URL = "https://dog.ceo/api/breeds/image/random";
     const {
       data: { message: dogImageUrl }
@@ -367,32 +280,34 @@ const App = () => {
     };
   };
 
-  React.useEffect(() => {
-    setState(previousState => {
-      return {
-        ...previousState,
-        isLoading: true
-      };
-    });
+  React.useLayoutEffect(() => {
+    if (matches("choosing.entering") && !previousMatches("choosing.entering")) {
+      const animation = cardRef.current.animate(
+        [
+          {
+            transform: "translateX(-60px)",
+            opacity: 0
+          },
+          {
+            transform: "none",
+            opacity: 1
+          }
+        ],
+        {
+          duration: 1000,
+          easing: "ease-in-out",
+          fill: "both"
+        }
+      );
 
-    fetchBreeds().then(breeds => {
-      createNewCard(breeds).then(newCardData => {
-        setState(previousState => ({
-          ...previousState,
-          ...newCardData,
-          breeds: breeds,
-          cardsCount: previousState.cardsCount + 1
-        }));
+      animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
+    }
+  }, [matches("choosing.entering")]);
 
-        setState(previousState => {
-          return {
-            ...previousState,
-            isLoading: false
-          };
-        });
-      });
-    });
-  }, []);
+  console.log("state:", cardState);
+  console.log("timer:", getTimer());
+
+  const isLoading = matches("fetchingBreeds") || matches("preparingCard");
 
   return (
     <StylesProvider injectFirst>
@@ -416,42 +331,98 @@ const App = () => {
             style={{ opacity: 0.1 }}
           />
         ) : (
-          <PageContainer
-            key={currentCardId}
-            imageUrl={dog.image.src}
-            choices={choices}
-            answerChoice={dog.breed}
-            onChoose={chosenBreed => {
-              const isChoiceCorrect = chosenBreed === dog.breed;
-
-              return isChoiceCorrect;
-            }}
-            onReveal={isChoiceCorrect => {
-              setState(previousState => ({
-                ...previousState,
-                successCardsCount: isChoiceCorrect
-                  ? previousState.successCardsCount + 1
-                  : previousState.successCardsCount
-              }));
-            }}
-            onFinish={() => {
-              setState(previousState => ({
-                ...previousState,
-                isLoading: true
-              }));
-              createNewCard(breeds).then(newCardData => {
-                setState(previousState => ({
-                  ...previousState,
-                  ...newCardData,
-                  cardsCount: previousState.cardsCount + 1
-                }));
-                setState(previousState => ({
-                  ...previousState,
-                  isLoading: false
-                }));
-              });
-            }}
-          />
+          <div className="main-section" key={currentCardId}>
+            <div
+              className="progress-bar-wrapper"
+              data-hidden={
+                matches("choosing.entering") || matches("exiting")
+                  ? ""
+                  : undefined
+              }
+            >
+              {matches("choosing.entering") ? null : (
+                <ProgressBar timer={getTimer()} duration={TIMER_DURATION_MS} />
+              )}
+            </div>
+            <div
+              className="card"
+              ref={cardRef}
+              data-state={cardState}
+              style={{}}
+            >
+              {cardState === "revealingAnswer" ? (
+                <button className="next-button" onClick={() => send("NEXT")}>
+                  <FontAwesomeIcon icon={faArrowRight} />
+                </button>
+              ) : (
+                undefined
+              )}
+              <img
+                src={dog.image.src}
+                alt="dog"
+                className="img"
+                ref={imageRef}
+                data-state={cardState === "exiting" ? "moving" : undefined}
+              />
+              <h2 className="question">Which dog type is it?</h2>
+              <ol
+                className="choices"
+                data-state={cardState === "exiting" ? "moving" : "idle"}
+              >
+                {choices.map((choice, index) => (
+                  <li
+                    onClick={() => {
+                      send("CLICKED_CHOICE", { choice });
+                    }}
+                    key={choice}
+                    ref={choiceRefs[index]}
+                    className="choice-li"
+                    data-bg-color={
+                      ["revealingAnswer", "exiting"].includes(cardState) &&
+                      choice === answerChoice
+                        ? "green"
+                        : ["chosen", "revealingAnswer", "exiting"].includes(
+                            cardState
+                          ) && choice === chosenChoice
+                        ? "primary"
+                        : matches("choosing")
+                        ? "hoverable"
+                        : undefined
+                    }
+                    data-pointer={matches("choosing") ? "" : undefined}
+                  >
+                    <div
+                      className="choice-alphabet"
+                      data-color={
+                        /* Watch out, order matters here */
+                        ["revealingAnswer", "exiting"].includes(cardState) &&
+                        choice === answerChoice
+                          ? "black"
+                          : ["chosen", "revealingAnswer", "exiting"].includes(
+                              cardState
+                            ) && choice === chosenChoice
+                          ? "white"
+                          : undefined
+                      }
+                    >
+                      {`${indexToAlphabet[index]}:`}
+                    </div>
+                    <span
+                      className="choice-text"
+                      data-color={
+                        ["revealingAnswer", "exiting"].includes(cardState) &&
+                        choice === answerChoice
+                          ? "white"
+                          : undefined
+                      }
+                    >
+                      {formatDogTypeText(choice)}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
         )}
       </div>
       <footer className="footer">
