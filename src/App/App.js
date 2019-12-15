@@ -14,6 +14,7 @@ import "./styles.scss";
 import ProgressBar from "./ProgressBar/ProgressBar";
 import usePrevious from "../utils/usePrevious";
 import TimerContext from "./ProgressBar/TimerContext";
+import useFlexibleState from "../utils/useFlexibleState";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -81,7 +82,7 @@ function shuffle(array) {
 }
 
 const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
-  const contextRef = React.useRef({
+  const [getExtendedState, setExtendedState] = useFlexibleState({
     cardsCount: 0,
     currentCardId: null,
     successCardsCount: 0,
@@ -95,36 +96,19 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
     chosenChoice: null
   });
 
-  const setStateSync = updateFunction => {
-    contextRef.current = updateFunction(contextRef.current);
-  };
-
-  const {
-    current: {
-      cardsCount,
-      currentCardId,
-      successCardsCount,
-      dog,
-      choices,
-      isChoiceCorrect,
-      chosenChoice
-    }
-  } = contextRef;
-
   const cardRef = React.useRef();
   const imageRef = React.useRef();
   const choiceRefs = [React.useRef(), React.useRef(), React.useRef()];
 
-  const { breed: answerChoice } = dog;
-
   const onChoose = chosenBreed => {
+    const { dog } = getExtendedState();
     const isChoiceCorrect = chosenBreed === dog.breed;
 
     return isChoiceCorrect;
   };
 
   const onReveal = isChoiceCorrect => {
-    setStateSync(previousState => ({
+    setExtendedState(previousState => ({
       ...previousState,
       successCardsCount: isChoiceCorrect
         ? previousState.successCardsCount + 1
@@ -151,9 +135,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
   };
 
   const createNewCard = async () => {
-    const {
-      current: { breeds }
-    } = contextRef;
+    const { breeds } = getExtendedState();
 
     const RANDOM_DOG_ENDPOINT_URL = "https://dog.ceo/api/breeds/image/random";
     const {
@@ -184,7 +166,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
     actions: {
       updateBreeds: (_, event) => {
         const { data: breeds } = event;
-        setStateSync(previousState => ({
+        setExtendedState(previousState => ({
           ...previousState,
           breeds: breeds
         }));
@@ -216,13 +198,16 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
       updateChoice: (_, { choice }) => {
         cancelTimer();
         const isChoiceCorrect = onChoose(choice);
-        setStateSync(previousState => ({
+        setExtendedState(previousState => ({
           ...previousState,
           isChoiceCorrect: isChoiceCorrect,
           chosenChoice: choice
         }));
       },
-      onReveal: () => onReveal(isChoiceCorrect)
+      onReveal: () => {
+        const { isChoiceCorrect } = getExtendedState();
+        onReveal(isChoiceCorrect);
+      }
     },
     services: {
       fetchBreeds: () => {
@@ -230,7 +215,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
       },
       prepareCard: () => {
         return createNewCard().then(newCardData => {
-          setStateSync(previousState => ({
+          setExtendedState(previousState => ({
             ...previousState,
             ...newCardData,
             cardsCount: previousState.cardsCount + 1
@@ -268,8 +253,9 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
 
   React.useLayoutEffect(() => {
     if (matches("revealingAnswer") && !previousMatches("revealingAnswer")) {
+      const { dog, choices } = getExtendedState();
       const answerChoiceIndex = choices.findIndex(
-        choice => choice === answerChoice
+        choice => choice === dog.breed
       );
       const answerChoiceRef = choiceRefs[answerChoiceIndex];
       answerChoiceRef.current.animate(
@@ -297,6 +283,17 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
   }, [hasTimedOut]);
 
   const isLoading = matches("fetchingBreeds") || matches("preparingCard");
+
+  const {
+    cardsCount,
+    currentCardId,
+    successCardsCount,
+    dog,
+    choices,
+    chosenChoice
+  } = getExtendedState();
+
+  const { breed: answerChoice } = dog;
 
   return (
     <StylesProvider injectFirst>
