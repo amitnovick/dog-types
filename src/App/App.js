@@ -169,27 +169,6 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
 
           animation.onfinish = () => send("FINISHED_EXIT_ANIMATION");
         },
-        animateAnswerListItem: () => {
-          const answerChoiceIndex = choices.findIndex(
-            choice => choice === answerChoice
-          );
-          const answerChoiceRef = choiceRefs[answerChoiceIndex];
-          answerChoiceRef.current.animate(
-            [
-              {
-                opacity: 0.2
-              },
-              {
-                opacity: 1
-              }
-            ],
-            {
-              duration: 500,
-              easing: "ease-in-out",
-              fill: "both"
-            }
-          );
-        },
         updateChoice: (_, { choice }) => {
           cancelTimer();
           const isChoiceCorrect = onChoose(choice);
@@ -290,6 +269,31 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
       animation.onfinish = () => send("FINISHED_ENTRANCE_ANIMATION");
     }
   }, [matches("choosing.entering")]);
+
+  React.useLayoutEffect(() => {
+    if (matches("revealingAnswer") && !previousMatches('revealingAnswer')) {
+      const answerChoiceIndex = choices.findIndex(
+        choice => choice === answerChoice
+      );
+      const answerChoiceRef = choiceRefs[answerChoiceIndex];
+      answerChoiceRef.current.animate(
+        [
+          {
+            opacity: 0.2
+          },
+          {
+            opacity: 1
+          }
+        ],
+        {
+          duration: 500,
+          easing: "ease-in-out",
+          fill: "both"
+        }
+      );
+
+    }
+  }, [matches("revealingAnswer")])
 
   const isLoading = matches("fetchingBreeds") || matches("preparingCard");
 

@@ -44,7 +44,7 @@ const machine = Machine({
       }
     },
     revealingAnswer: {
-      entry: ["onReveal", "animateAnswerListItem"],
+      entry: "onReveal",
       on: { NEXT: "exiting" }
     },
     exiting: {
