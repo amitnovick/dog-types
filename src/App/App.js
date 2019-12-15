@@ -91,7 +91,6 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
     },
     choices: null,
     breeds: null,
-    isLoading: true,
     isChoiceCorrect: null,
     chosenChoice: null
   });
@@ -131,6 +130,53 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
         ? previousState.successCardsCount + 1
         : previousState.successCardsCount
     }));
+  };
+
+  const fetchBreeds = async () => {
+    const ALL_BREEDS_ENDPOINT_URL = " https://dog.ceo/api/breeds/list/all";
+    const {
+      data: { message: breedsObject }
+    } = await Axios.get(ALL_BREEDS_ENDPOINT_URL);
+    const breeds = Object.entries(breedsObject).reduce(
+      (accumulated, [archBreed, subBreeds]) => {
+        return [
+          ...accumulated,
+          archBreed,
+          ...subBreeds.map(subBreed => archBreed + "-" + subBreed)
+        ];
+      },
+      []
+    );
+    return breeds;
+  };
+
+  const createNewCard = async () => {
+    const {
+      current: { breeds }
+    } = contextRef;
+
+    const RANDOM_DOG_ENDPOINT_URL = "https://dog.ceo/api/breeds/image/random";
+    const {
+      data: { message: dogImageUrl }
+    } = await Axios.get(RANDOM_DOG_ENDPOINT_URL);
+    const breed = getBreedFromDogImageUrl(dogImageUrl);
+    const image = await preloadImage(dogImageUrl);
+    const dog = { image, breed };
+    const arrayWithoutSpecificBreed = breeds.filter(b => b !== breed);
+    const twoRandomChoices = pickNrandomlyFromArray(
+      2,
+      arrayWithoutSpecificBreed
+    );
+    const choices = [...twoRandomChoices, breed];
+
+    shuffle(choices);
+    const cardId = generateUniqueId();
+
+    return {
+      currentCardId: cardId,
+      dog: dog,
+      choices: choices
+    };
   };
 
   const [{ value: cardState, matches }, send] = useMachine(
@@ -199,53 +245,6 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
 
   const previousMatches = usePrevious(matches);
 
-  const fetchBreeds = async () => {
-    const ALL_BREEDS_ENDPOINT_URL = " https://dog.ceo/api/breeds/list/all";
-    const {
-      data: { message: breedsObject }
-    } = await Axios.get(ALL_BREEDS_ENDPOINT_URL);
-    const breeds = Object.entries(breedsObject).reduce(
-      (accumulated, [archBreed, subBreeds]) => {
-        return [
-          ...accumulated,
-          archBreed,
-          ...subBreeds.map(subBreed => archBreed + "-" + subBreed)
-        ];
-      },
-      []
-    );
-    return breeds;
-  };
-
-  const createNewCard = async () => {
-    const {
-      current: { breeds }
-    } = contextRef;
-
-    const RANDOM_DOG_ENDPOINT_URL = "https://dog.ceo/api/breeds/image/random";
-    const {
-      data: { message: dogImageUrl }
-    } = await Axios.get(RANDOM_DOG_ENDPOINT_URL);
-    const breed = getBreedFromDogImageUrl(dogImageUrl);
-    const image = await preloadImage(dogImageUrl);
-    const dog = { image, breed };
-    const arrayWithoutSpecificBreed = breeds.filter(b => b !== breed);
-    const twoRandomChoices = pickNrandomlyFromArray(
-      2,
-      arrayWithoutSpecificBreed
-    );
-    const choices = [...twoRandomChoices, breed];
-
-    shuffle(choices);
-    const cardId = generateUniqueId();
-
-    return {
-      currentCardId: cardId,
-      dog: dog,
-      choices: choices
-    };
-  };
-
   React.useLayoutEffect(() => {
     if (matches("choosing.entering") && !previousMatches("choosing.entering")) {
       const animation = cardRef.current.animate(
@@ -271,7 +270,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
   }, [matches("choosing.entering")]);
 
   React.useLayoutEffect(() => {
-    if (matches("revealingAnswer") && !previousMatches('revealingAnswer')) {
+    if (matches("revealingAnswer") && !previousMatches("revealingAnswer")) {
       const answerChoiceIndex = choices.findIndex(
         choice => choice === answerChoice
       );
@@ -291,17 +290,16 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
           fill: "both"
         }
       );
-
     }
-  }, [matches("revealingAnswer")])
-
-  const isLoading = matches("fetchingBreeds") || matches("preparingCard");
+  }, [matches("revealingAnswer")]);
 
   React.useEffect(() => {
     if (hasTimedOut) {
       send("CHOICE_WINDOW_TIMEOUT");
     }
   }, [hasTimedOut]);
+
+  const isLoading = matches("fetchingBreeds") || matches("preparingCard");
 
   return (
     <StylesProvider injectFirst>
