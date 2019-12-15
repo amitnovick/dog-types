@@ -13,6 +13,7 @@ import { ReactComponent as DeckSuccess } from "./deck-checkmark.svg";
 import "./styles.scss";
 import ProgressBar from "./ProgressBar/ProgressBar";
 import usePrevious from "../utils/usePrevious";
+import TimerContext from "./ProgressBar/TimerContext";
 
 function preloadImage(url) {
   return new Promise(resolve => {
@@ -79,7 +80,7 @@ function shuffle(array) {
   return array;
 }
 
-const App = () => {
+const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
   const contextRef = React.useRef({
     cardsCount: 0,
     currentCardId: null,
@@ -110,12 +111,6 @@ const App = () => {
       chosenChoice
     }
   } = contextRef;
-
-  const [hasTimedOut, setHasTimedOut] = React.useState(false);
-  const { getTimer, startTimer, cancelTimer } = useTimer({
-    onTimeout: () => setHasTimedOut(true),
-    duration: TIMER_DURATION_MS
-  });
 
   const cardRef = React.useRef();
   const imageRef = React.useRef();
@@ -196,7 +191,6 @@ const App = () => {
           );
         },
         updateChoice: (_, { choice }) => {
-          console.log("cancel timer:", getTimer());
           cancelTimer();
           const isChoiceCorrect = onChoose(choice);
           setStateSync(previousState => ({
@@ -225,13 +219,6 @@ const App = () => {
   );
 
   const previousMatches = usePrevious(matches);
-
-  React.useEffect(() => {
-    if (hasTimedOut) {
-      send("CHOICE_WINDOW_TIMEOUT");
-      setHasTimedOut(false);
-    }
-  }, [hasTimedOut]);
 
   const fetchBreeds = async () => {
     const ALL_BREEDS_ENDPOINT_URL = " https://dog.ceo/api/breeds/list/all";
@@ -304,10 +291,15 @@ const App = () => {
     }
   }, [matches("choosing.entering")]);
 
-  console.log("state:", cardState);
-  console.log("timer:", getTimer());
-
   const isLoading = matches("fetchingBreeds") || matches("preparingCard");
+
+  React.useEffect(() => {
+    if (hasTimedOut) {
+      send("CHOICE_WINDOW_TIMEOUT");
+    }
+  }, [hasTimedOut]);
+
+  console.log("App");
 
   return (
     <StylesProvider injectFirst>
@@ -341,7 +333,7 @@ const App = () => {
               }
             >
               {matches("choosing.entering") ? null : (
-                <ProgressBar timer={getTimer()} duration={TIMER_DURATION_MS} />
+                <ProgressBar duration={TIMER_DURATION_MS} />
               )}
             </div>
             <div
@@ -447,6 +439,22 @@ const App = () => {
       </footer>
     </StylesProvider>
   );
+});
+
+const TimerWrapper = () => {
+  const { timer, startTimer, cancelTimer } = useTimer({
+    duration: TIMER_DURATION_MS
+  });
+
+  return (
+    <TimerContext.Provider value={timer}>
+      <App
+        startTimer={startTimer}
+        cancelTimer={cancelTimer}
+        hasTimedOut={timer === 0}
+      />
+    </TimerContext.Provider>
+  );
 };
 
-export default App;
+export default TimerWrapper;

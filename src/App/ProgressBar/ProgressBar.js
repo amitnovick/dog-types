@@ -1,8 +1,10 @@
 import React from "react";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import "./styles.scss";
+import TimerContext from "./TimerContext";
 
-const ProgressBar = React.memo(({ timer, duration }) => {
+const ProgressBar = React.memo(({ duration }) => {
+  const timer = React.useContext(TimerContext);
   const percentage = timer / (duration / 100);
   const displayedSeconds = Math.ceil(timer / 1000);
 
