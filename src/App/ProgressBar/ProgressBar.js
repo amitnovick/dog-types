@@ -15,7 +15,6 @@ const ProgressBar = React.memo(({ duration }) => {
         className="progress-bar"
         variant="determinate"
         color="secondary"
-        style={{ "--percentage": percentage }}
         value={percentage}
       />
     </div>

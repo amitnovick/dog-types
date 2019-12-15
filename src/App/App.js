@@ -299,8 +299,6 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
     }
   }, [hasTimedOut]);
 
-  console.log("App");
-
   return (
     <StylesProvider injectFirst>
       <div className="screen">
