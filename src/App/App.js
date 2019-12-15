@@ -433,6 +433,7 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
           Attribution: checkmark, Created by arif fajar yulianto, ID from the
           Noun Project (CCBY)
         </p>
+        <p>Attribution: Pet CEO API, Created by Elliott Landsborough</p>
       </footer>
     </StylesProvider>
   );
