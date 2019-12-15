@@ -4,6 +4,7 @@ import { StylesProvider } from "@material-ui/core/styles";
 import { useMachine } from "@xstate/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import Axios from "axios";
 
 import useTimer from "./ProgressBar/useTimer";
@@ -412,25 +413,24 @@ const App = React.memo(({ startTimer, cancelTimer, hasTimedOut }) => {
         )}
       </div>
       <footer className="footer">
+        <h4>Attribution</h4>
         <p>
-          Made by{" "}
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://github.com/amitnovick"
-          >
-            Amit Novick
-          </a>
+          stack of paper, Created by Ale Estrada from the Noun Project (CCBY)
         </p>
         <p>
-          Attribution: stack of paper, Created by Ale Estrada from the Noun
-          Project (CCBY)
+          checkmark, Created by arif fajar yulianto, ID from the Noun Project
+          (CCBY)
         </p>
-        <p>
-          Attribution: checkmark, Created by arif fajar yulianto, ID from the
-          Noun Project (CCBY)
-        </p>
-        <p>Attribution: Pet CEO API, Created by Elliott Landsborough</p>
+        <p>Pet CEO API, Created by Elliott Landsborough</p>
+        <h2>Made by Amit Novick</h2>
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/amitnovick"
+          className="github-link"
+        >
+          <FontAwesomeIcon icon={faGithub} />
+        </a>
       </footer>
     </StylesProvider>
   );
